@@ -182,7 +182,12 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
         <button class="opt" data-set="pinch" data-v="one">1本の指で</button>
         <button class="opt" data-set="pinch" data-v="two">2本の指で</button>
       </div>
-      <p class="note">ビーズは、線から外れません。ならんだビーズは、おし合います。ぜんぶ向こうの端にあつまると、星が出て、少しして元に戻ります。2本の指：ビーズの上に2本の指を置いて、つまむようにして動かします。</p>
+      <h2>とおす：手をはなしたとき</h2>
+      <div class="opts">
+        <button class="opt" data-set="slide" data-v="on">すべる</button>
+        <button class="opt" data-set="slide" data-v="off">その場でとまる</button>
+      </div>
+      <p class="note">ビーズは、線から外れません。ならんだビーズは、おし合います。ぜんぶ向こうの端にあつまると、星が出て、少しして元に戻ります。2本の指：ビーズの上に2本の指を置いて、つまむようにして動かします。すべる：手をはなしたビーズが、坂の下へ、ゆっくり滑ります（ゆるい坂では止まります）。つかむのが難しい子は「その場でとまる」を選んでください。</p>
     </div>
 
     <div class="row">
@@ -280,7 +285,7 @@ window.addEventListener('resize', resize);
 resize();
 
 // ---- 設定（保存しない）----
-const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pages: 5, route: 'easy', bsize: 'l', beads: 3, pinch: 'one', pull: 'tissue', fingers: 'two', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
+const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pages: 5, route: 'easy', bsize: 'l', beads: 3, pinch: 'one', slide: 'on', pull: 'tissue', fingers: 'two', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
 // 見た目の強さ：edge＝ふちの線、glow＝入れ口の光、stars＝星、bits＝紙くず、light＝明かり
 const LOOK = {
   soft:   { edge: 0.14, lw: 1,   glow: 0.18, stars: 2, bits: 4,  light: 0.45 },
@@ -1268,7 +1273,7 @@ function tsGeo(){
 function resetTs(){
   TS.key = ''; const G = tsGeo();
   TS.beads = []; TS.grab = null; TS.done = -1; TS.glide = null; TS.glow = 0;
-  for (let k = 0; k < S.beads; k++){ const a = G.r * 1.25 + k * G.D; TS.beads.push({ a, home: a, ci: k % 5 }); }
+  for (let k = 0; k < S.beads; k++){ const a = G.r * 1.25 + k * G.D; TS.beads.push({ a, home: a, ci: k % 5, v: 0 }); }
 }
 const tsMin = (G, k) => G.r * 1.25 + k * G.D;
 const tsMax = (G, k) => G.L - G.r * 1.25 - (TS.beads.length - 1 - k) * G.D;
@@ -1289,10 +1294,64 @@ function nearestOn(G, q, aCur, win){
   }
   return { a: ba, d: best };
 }
-function tsResolve(j){
-  const G = TS.geo, B = TS.beads;
-  for (let k = j + 1; k < B.length; k++) B[k].a = Math.max(B[k].a, B[k - 1].a + G.D);
-  for (let k = j - 1; k >= 0; k--) B[k].a = Math.min(B[k].a, B[k + 1].a - G.D);
+// ビーズがかさならないように、おし合いを解く（つかんでいるビーズは動かさない）
+function tsSolve(){
+  const G = TS.geo, B = TS.beads, n = B.length, gi = TS.grab ? TS.grab.k : -1;
+  for (let it = 0; it < 6; it++){
+    for (let k = 0; k < n; k++) B[k].a = clamp(B[k].a, tsMin(G, k), tsMax(G, k));
+    for (let k = 0; k < n - 1; k++){
+      const ov = G.D - (B[k + 1].a - B[k].a);
+      if (ov <= 0) continue;
+      if (k === gi) B[k + 1].a += ov;
+      else if (k + 1 === gi) B[k].a -= ov;
+      else { B[k].a -= ov / 2; B[k + 1].a += ov / 2; }
+    }
+  }
+  for (let k = 0; k < n; k++) B[k].a = clamp(B[k].a, tsMin(G, k), tsMax(G, k));
+}
+// 線のかたむき（下向きが正）。手をはなしたビーズは、坂の下へ、ゆっくり滑る
+function slopeAt(G, a){
+  const Lc = G.Lc; let lo = 0, hi = Lc.length - 1;
+  a = clamp(a, 0, G.L);
+  while (hi - lo > 1){ const m = (lo + hi) >> 1; if (Lc[m] <= a) lo = m; else hi = m; }
+  const i0 = Math.max(0, lo - 3), i1 = Math.min(Lc.length - 1, lo + 3);
+  return (G.pts[i1].y - G.pts[i0].y) / Math.max(1e-6, Lc[i1] - Lc[i0]);
+}
+function tsPhysics(dt){
+  const G = TS.geo, B = TS.beads, n = B.length, gi = TS.grab ? TS.grab.k : -1, g = U * 0.7;
+  const steps = Math.max(1, Math.ceil(dt / 0.016)), h = dt / steps;
+  for (let st = 0; st < steps; st++){
+    for (let k = 0; k < n; k++){
+      if (k === gi) continue;
+      const b = B[k], acc = g * slopeAt(G, b.a);
+      b.v = (b.v || 0) + acc * h; b.v *= Math.exp(-h * 0.8);
+      if (Math.abs(b.v) < 6 && Math.abs(acc) < 0.1 * g) b.v = 0;       // ゆるい坂では、止まったまま
+      b.v = clamp(b.v, -U * 1.1, U * 1.1);
+      b.a += b.v * h;
+      const pg = Math.floor(b.a / (G.L / 9));
+      if (b.pg === undefined) b.pg = pg;
+      if (pg !== b.pg){
+        b.pg = pg;
+        if (Math.abs(b.v) > 40 && TS.pingT <= 0){ TS.pingT = 0.12; ping(BELL[((pg % BELL.length) + BELL.length) % BELL.length], 0.016, 0.5, 2.76); }
+      }
+    }
+    tsSolve();
+    for (let k = 0; k < n; k++){
+      if (k === gi) continue;
+      if (B[k].a <= tsMin(G, k) + 0.01 && B[k].v < 0) B[k].v = 0;
+      if (B[k].a >= tsMax(G, k) - 0.01 && B[k].v > 0) B[k].v = 0;
+    }
+    for (let k = 0; k < n - 1; k++){
+      if (k === gi || k + 1 === gi) continue;
+      if (B[k + 1].a - B[k].a < G.D + 0.6 && (B[k].v || 0) > (B[k + 1].v || 0)){ const m = ((B[k].v || 0) + (B[k + 1].v || 0)) / 2; B[k].v = B[k + 1].v = m; }
+    }
+  }
+}
+function tsRelease(flick){
+  const gr = TS.grab; if (!gr) return;
+  TS.grab = null;
+  const b = TS.beads[gr.k];
+  b.v = (S.slide === 'on' && flick) ? clamp((gr.v || 0) * 0.5, -U * 0.9, U * 0.9) : 0;     // はなした勢いを、少しだけ引きつぐ
 }
 function tsPacked(G){
   const B = TS.beads, n = B.length; if (!n) return false;
@@ -1303,11 +1362,14 @@ function updToosu(dt){
   TS.glow += ((TS.grab ? 1 : 0) - TS.glow) * (1 - Math.exp(-dt / 0.2));
   if (TS.grab){
     const b = TS.beads[TS.grab.k];
+    const a0 = b.a;
     b.a += (TS.grab.tgt - b.a) * (1 - Math.exp(-dt / 0.04));
-    tsResolve(TS.grab.k);
+    TS.grab.v = lerp(TS.grab.v || 0, (b.a - a0) / Math.max(dt, 0.001), 0.3);
     const pg = Math.floor(b.a / (G.L / 9));
     if (pg !== TS.peg){ TS.peg = pg; ping(BELL[((pg % BELL.length) + BELL.length) % BELL.length], 0.022, 0.5, 2.76); }
   }
+  TS.pingT = Math.max(0, (TS.pingT || 0) - dt);
+  if (S.slide === 'on' && TS.done < 0 && !TS.glide) tsPhysics(dt); else if (TS.grab) tsSolve();
   if (TS.done < 0 && !TS.glide && tsPacked(G)){
     TS.done = 0; TS.grab = null;
     const e = G.pts[G.pts.length - 1];
@@ -1321,7 +1383,7 @@ function updToosu(dt){
   if (TS.glide){
     const g = TS.glide; g.t += dt / 1.4;
     const u = ease(Math.min(1, g.t));
-    TS.beads.forEach((b, k) => { b.a = lerp(g.from[k], b.home, u); });
+    TS.beads.forEach((b, k) => { b.a = lerp(g.from[k], b.home, u); b.v = 0; });
     if (g.t >= 1){ TS.glide = null; TS.done = -1; }
   }
 }
@@ -1336,7 +1398,7 @@ function tsHit(G, p, extra){
 }
 function tsBegin(G, k, ids, q){
   const b = TS.beads[k], near = nearestOn(G, q, b.a, G.L);
-  TS.grab = { k, ids, off: near.a - b.a, tgt: b.a };
+  TS.grab = { k, ids, off: near.a - b.a, tgt: b.a, v: 0 }; b.v = 0;
   TS.peg = Math.floor(b.a / (G.L / 9));
 }
 function tsDown(id, p){
@@ -1358,11 +1420,11 @@ function tsMove(id, p){
     q = { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 };
   }
   const b = TS.beads[gr.k], near = nearestOn(G, q, b.a, G.L * 0.3), lim = G.r * TS_LIM[S.assist];
-  if (near.d > lim * 2.2){ TS.grab = null; return; }        // 線からはなれすぎたら、はなす
+  if (near.d > lim * 2.2){ tsRelease(false); return; }        // 線からはなれすぎたら、はなす
   if (near.d > lim) return;                                  // 少しはなれたら、その場で待つ
   gr.tgt = clamp(near.a - gr.off, tsMin(G, gr.k), tsMax(G, gr.k));
 }
-function tsUp(id){ if (TS.grab && TS.grab.ids.includes(id)) TS.grab = null; }
+function tsUp(id){ if (TS.grab && TS.grab.ids.includes(id)) tsRelease(true); }
 function drawBead(x, y, r, ci, lift){
   const rr = r * (1 + 0.08 * lift), so = rr * (0.12 + 0.25 * lift), L = LOOK[S.look];
   ctx.beginPath(); ctx.arc(x + so, y + so, rr, 0, Math.PI * 2); ctx.fillStyle = 'rgba(90,64,40,' + (0.16 - 0.05 * lift).toFixed(2) + ')'; ctx.fill();
@@ -1544,7 +1606,7 @@ gear.addEventListener('pointerdown', e => {
 gear.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openPanel(); } });
 
 function markOpts(){
-  const cur = { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pages: String(S.pages), route: S.route, bsize: S.bsize, beads: String(S.beads), pinch: S.pinch, pull: S.pull, fingers: S.fingers, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, sound: S.sound ? 'on' : 'off' };
+  const cur = { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pages: String(S.pages), route: S.route, bsize: S.bsize, beads: String(S.beads), pinch: S.pinch, slide: S.slide, pull: S.pull, fingers: S.fingers, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, sound: S.sound ? 'on' : 'off' };
   document.querySelectorAll('#panel [data-set]').forEach(b => b.setAttribute('aria-pressed', String(cur[b.dataset.set] === b.dataset.v)));
 }
 const volEl = $('vol');
@@ -1563,6 +1625,7 @@ $('panel').addEventListener('click', e => {
     if (k === 'bsize'){ S.bsize = v; resetTs(); }
     if (k === 'beads'){ S.beads = Number(v); resetTs(); }
     if (k === 'pinch'){ S.pinch = v; TS.grab = null; }
+    if (k === 'slide'){ S.slide = v; TS.beads.forEach(b => { b.v = 0; }); }
     if (k === 'pull'){ S.pull = v; resetHip(); }
     if (k === 'fingers'){ S.fingers = v; CG.tear = null; CG.pend = null; }
     if (k === 'assist') S.assist = v;
