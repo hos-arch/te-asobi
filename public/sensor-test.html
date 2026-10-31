@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>まわす：センサーのテスト（支援者用）</title>
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box}
+html,body{margin:0;background:#f3ecdc;color:#3a3326;font-family:'Hiragino Sans','Hiragino Kaku Gothic ProN',system-ui,sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:520px;margin:0 auto;padding:calc(env(safe-area-inset-top) + 16px) 16px calc(env(safe-area-inset-bottom) + 28px);display:flex;flex-direction:column;gap:14px}
+h1{font-size:19px;margin:0}
+h2{font-size:14px;margin:0 0 6px;color:#5a5040}
+.note{font-size:13px;line-height:1.65;color:#6e6552;margin:0}
+.card{background:#fbf7ee;border-radius:16px;padding:14px 14px 16px;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+button{font:inherit;font-size:16px;min-height:52px;padding:6px 14px;border-radius:12px;border:1.5px solid #cdbf9f;background:#fffdf8;color:#3a3326;cursor:pointer}
+button.main{background:#4a6442;border-color:#4a6442;color:#fff}
+button:disabled{opacity:.45}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#status{font-size:15px;line-height:1.6}
+#status b{font-weight:700}
+.dialwrap{display:flex;justify-content:center;padding:6px 0 2px}
+#dial{width:min(62vw,260px);height:min(62vw,260px);transition:none}
+table{width:100%;border-collapse:collapse;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{padding:5px 4px;text-align:right;border-bottom:1px solid #e6dcc2}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:#5a5040;font-size:12px}
+.hl{background:#e7f0e2}
+#log{font-size:12px;line-height:1.6;color:#6e6552;white-space:pre-wrap;word-break:break-all;max-height:7.5em;overflow:auto}
+</style>
+</head>
+<body>
+<main>
+  <h1>まわす：センサーのテスト</h1>
+  <p class="note">支援者のテスト用ページです（子どもには見せません）。端末を机の上に置いて、その場でゆっくり回し、下の数字が動くかを見てください。カメラもマイクも使いません。数字は保存せず、どこにも送りません。</p>
+
+  <div class="card">
+    <button id="startBtn" class="main" style="width:100%">センサーを使う（はじめに1回押す）</button>
+    <p id="status" class="note" style="margin-top:10px">まだ始めていません。</p>
+  </div>
+
+  <div class="card">
+    <h2>ふた（回した角度が、そのまま見えます）</h2>
+    <div class="dialwrap">
+      <svg id="dial" viewBox="-100 -100 200 200" aria-label="ふたの見本">
+        <circle r="92" fill="#efe5cf" stroke="#cdbf9f" stroke-width="3"/>
+        <g id="lid">
+          <circle r="66" fill="#e6c36a" stroke="#8d7233" stroke-width="3"/>
+          <g stroke="#8d7233" stroke-width="3" stroke-linecap="round">
+            <path d="M0 -60V-40"/><path d="M0 60V40"/><path d="M-60 0H-40"/><path d="M60 0H40"/>
+            <path d="M42 -42L28 -28" opacity=".6"/><path d="M-42 42L-28 28" opacity=".6"/><path d="M42 42L28 28" opacity=".6"/><path d="M-42 -42L-28 -28" opacity=".6"/>
+          </g>
+          <circle r="10" fill="#8d7233"/>
+          <path d="M0 -66L-9 -49H9Z" fill="#fbf7ee" stroke="#8d7233" stroke-width="2"/>
+        </g>
+      </svg>
+    </div>
+    <div class="grid" style="margin-top:8px">
+      <button id="resetBtn">0にもどす</button>
+      <button id="flipBtn">見える向きを入れかえる</button>
+    </div>
+    <p id="turns" class="note" style="margin-top:8px;font-size:15px"></p>
+  </div>
+
+  <div class="card">
+    <h2>センサーの数字（回転の速さ：度/秒）</h2>
+    <table>
+      <tr><th></th><th>いま</th><th>回った合計(度)</th></tr>
+      <tr id="rA" class="hl"><td>ア（画面に垂直な軸）</td><td id="vA">–</td><td id="sA">–</td></tr>
+      <tr id="rB"><td>イ（左右の軸）</td><td id="vB">–</td><td id="sB">–</td></tr>
+      <tr id="rG"><td>ウ（上下の軸）</td><td id="vG">–</td><td id="sG">–</td></tr>
+    </table>
+    <p class="note" style="margin-top:8px">端末を机に置いて、その場で回すと、「ア」が動きます。持ち上げて、ほかの向きに回したときは、「イ」「ウ」が動きます。</p>
+    <p id="rate" class="note" style="margin-top:6px"></p>
+    <p id="tilt" class="note" style="margin-top:6px"></p>
+  </div>
+
+  <div class="card">
+    <h2>じっとさせたときの、ずれ</h2>
+    <p class="note" style="margin-bottom:8px">端末を机に置いて、さわらずに5秒待ちます。止まっているのに角度が少しずつ増える場合、そのずれを数字で見られます。</p>
+    <button id="biasBtn" style="width:100%">5秒はかる</button>
+    <p id="bias" class="note" style="margin-top:8px"></p>
+    <label class="note" style="display:flex;gap:8px;align-items:center;margin-top:8px"><input type="checkbox" id="useBias"> このずれを引いて計算する</label>
+    <label class="note" style="display:flex;gap:8px;align-items:center;margin-top:6px"><input type="checkbox" id="dead" checked> 小さなゆれ（1度/秒より小さい）は数えない</label>
+  </div>
+
+  <div class="card">
+    <h2>きろく（画面を見るだけ。保存しません）</h2>
+    <div id="log"></div>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const st = { on: false, ev: 0, ok: 0, dead: true, lastT: 0, rate: 0, rateCount: 0, rateT: 0, v: [0, 0, 0], sum: [0, 0, 0], bias: [0, 0, 0], biasOn: false, flip: 1, measuring: null, grav: null };
+const logEl = $('log');
+function log(m){ const t = new Date().toLocaleTimeString('ja-JP', { hour12: false }); logEl.textContent = (t + ' ' + m + '\n' + logEl.textContent).slice(0, 1500); }
+
+function setStatus(h){ $('status').innerHTML = h; }
+async function ask(){
+  const out = {};
+  for (const [name, C] of [['motion', window.DeviceMotionEvent], ['orient', window.DeviceOrientationEvent]]){
+    if (!C){ out[name] = 'なし'; continue; }
+    if (typeof C.requestPermission === 'function'){
+      try { out[name] = await C.requestPermission(); } catch (e){ out[name] = 'エラー：' + (e && e.message || e); }
+    } else out[name] = '許可は不要';
+  }
+  return out;
+}
+$('startBtn').addEventListener('click', async () => {
+  $('startBtn').disabled = true;
+  const r = await ask();
+  log('許可：動き=' + r.motion + ' / 向き=' + r.orient);
+  if (r.motion === 'denied' || String(r.motion).startsWith('エラー')){
+    setStatus('<b>許可されませんでした。</b>設定でセンサーの許可を確認し、ページを開き直してください。（' + r.motion + '）');
+    $('startBtn').disabled = false; return;
+  }
+  if (!window.DeviceMotionEvent){ setStatus('<b>この端末（ブラウザ）には、動きのセンサーがありません。</b>'); return; }
+  st.on = true; st.lastT = 0; st.rateT = performance.now(); st.rateCount = 0;
+  window.addEventListener('devicemotion', onMotion);
+  setStatus('センサーを待っています…端末を動かしてください。');
+  setTimeout(() => { if (!st.ok) setStatus('<b>回転の数字が届きません。</b>パソコンなどでは、センサーがないため動きません。iPhone・iPadで開いてください。（動きのイベント：' + st.ev + ' 回）'); }, 2500);
+});
+
+function onMotion(e){
+  const now = performance.now();
+  st.ev++;
+  const rr = e.rotationRate;
+  if (!rr || rr.alpha == null){
+    if (st.ev === 1) log('rotationRate が届きません（ジャイロなし？）');
+    return;
+  }
+  let dt = st.lastT ? (now - st.lastT) / 1000 : 0; st.lastT = now;
+  if (dt > 0.1) dt = 0.1;
+  const raw = [rr.alpha || 0, rr.beta || 0, rr.gamma || 0];
+  if (st.measuring){ st.measuring.n++; for (let i = 0; i < 3; i++) st.measuring.s[i] += raw[i]; }
+  const v = raw.map((x, i) => x - (st.biasOn ? st.bias[i] : 0));
+  st.v = v; st.ok++;
+  for (let i = 0; i < 3; i++) st.sum[i] += (st.dead && Math.abs(v[i]) < 1.0 ? 0 : v[i]) * dt;   // 1度/秒より小さいゆれは数えない
+  st.rateCount++;
+  if (now - st.rateT > 1000){ st.rate = st.rateCount * 1000 / (now - st.rateT); st.rateCount = 0; st.rateT = now; }
+  const g = e.accelerationIncludingGravity;
+  if (g && g.z != null) st.grav = [g.x, g.y, g.z];
+}
+
+// 画面の更新（センサーの頻度と別にする）
+const f1 = x => (x >= 0 ? '+' : '') + x.toFixed(1);
+function paint(){
+  if (st.ok){
+    ['A', 'B', 'G'].forEach((k, i) => { $('v' + k).textContent = f1(st.v[i]); $('s' + k).textContent = f1(st.sum[i]); });
+    $('lid').setAttribute('transform', 'rotate(' + (-st.sum[0] * st.flip).toFixed(2) + ')');
+    const t = st.sum[0] / 360;
+    $('turns').textContent = 'ア：' + (Math.abs(t) < 0.005 ? '0' : f1(t)) + ' 回転（' + (st.sum[0] > 0 ? '反時計まわり' : st.sum[0] < 0 ? '時計まわり' : '') + '）';
+    $('rate').textContent = '届く回数：' + st.rate.toFixed(0) + ' 回/秒　受け取った合計：' + st.ev;
+    if (st.grav){
+      const gz = st.grav[2], flat = Math.abs(gz) > 8.3;
+      $('tilt').textContent = '向き：' + (flat ? '机に平らに置いている（画面に垂直な軸＝ア を使えます）' : '傾いている／立てている（アは、机で回す動きになりません）');
+    }
+    setStatus('センサーは動いています。<b>' + (st.biasOn ? 'ずれを引いて計算中' : 'ずれは引いていません') + '</b>');
+  }
+  requestAnimationFrame(paint);
+}
+requestAnimationFrame(paint);
+
+$('resetBtn').addEventListener('click', () => { st.sum = [0, 0, 0]; log('0にもどしました'); });
+$('flipBtn').addEventListener('click', () => { st.flip = -st.flip; log('ふたの見える向きを入れかえました'); });
+$('dead').addEventListener('change', e => { st.dead = e.target.checked; log('小さなゆれを数えない：' + (st.dead ? 'する' : 'しない')); });
+$('useBias').addEventListener('change', e => { st.biasOn = e.target.checked; log('ずれを引く：' + (st.biasOn ? 'する' : 'しない')); });
+$('biasBtn').addEventListener('click', () => {
+  if (!st.ok){ $('bias').textContent = '先に、上の「センサーを使う」を押してください。'; return; }
+  $('biasBtn').disabled = true; let left = 5; $('bias').textContent = 'はかっています…端末にさわらないでください。';
+  st.measuring = { n: 0, s: [0, 0, 0] };
+  const tm = setInterval(() => { left--; if (left > 0){ $('biasBtn').textContent = left + '秒…'; return; }
+    clearInterval(tm); const m = st.measuring; st.measuring = null; $('biasBtn').disabled = false; $('biasBtn').textContent = '5秒はかる';
+    if (!m || m.n < 5){ $('bias').textContent = '数字が足りませんでした。もう一度はかってください。'; return; }
+    st.bias = m.s.map(x => x / m.n);
+    const perMin = st.bias.map(x => x * 60);
+    $('bias').textContent = '止まっているときの値：ア ' + f1(st.bias[0]) + '　イ ' + f1(st.bias[1]) + '　ウ ' + f1(st.bias[2]) + ' 度/秒。引かずに1分おくと、角度が ア ' + f1(perMin[0]) + ' 度ずれる見込みです。';
+    log('ずれ：ア' + f1(st.bias[0]) + ' イ' + f1(st.bias[1]) + ' ウ' + f1(st.bias[2]) + '（度/秒）。' + m.n + '回から計算');
+  }, 1000);
+  $('biasBtn').textContent = left + '秒…';
+});
+</script>
+</body>
+</html>
