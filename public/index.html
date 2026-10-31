@@ -67,7 +67,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
 <div id="intro" role="dialog" aria-labelledby="introTitle">
   <div class="card">
     <h1 id="introTitle">て あそび（支援者用の説明）</h1>
-    <p>指を使った操作（入れる、ひっぱる、ちぎる）を、画面の上でくり返し楽しむための遊びです。場面は支援者メニューで選びます。本物のコルク積木や容器、ティッシュ、色紙で遊ぶことを先にして、この画面は、くり返しや段階を上げるときの補助として使ってください。</p>
+    <p>指を使った操作（入れる、ひっぱる、ちぎる、めくる）を、画面の上でくり返し楽しむための遊びです。場面は支援者メニューで選びます。本物のコルク積木や容器、ティッシュ、色紙で遊ぶことを先にして、この画面は、くり返しや段階を上げるときの補助として使ってください。</p>
     <h2>すすめ方</h2>
     <ol>
       <li>「はじめる」を押す。</li>
@@ -80,6 +80,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
       <li>画面では、握る力や、どの指でつまんでいるかは分かりません。つまみ方は、大人が見てください。</li>
       <li>手のひら全体で画面に触れてしまう子は、設定の「最初に触れた指だけ」を選んでください。</li>
       <li>2本の指で紙をちぎるのが難しい子は、設定で「1本の指で」を選んでください。</li>
+      <li>「めくる」は、指1本で、ページのはしを左へなぞります。本物の絵本や、手作りの厚紙の冊子で先にめくってから使うと、わかりやすくなります。</li>
       <li>設定は、右上の点を1秒ほど長押しすると開きます。カメラもマイクも使いません。名前や記録も保存しません。</li>
     </ul>
     <button id="introBtn" type="button">はじめる</button>
@@ -112,6 +113,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
         <button class="opt" data-set="scene" data-v="ireru">いれる</button>
         <button class="opt" data-set="scene" data-v="hipparu">ひっぱる</button>
         <button class="opt" data-set="scene" data-v="chigiru">ちぎる</button>
+        <button class="opt" data-set="scene" data-v="mekuru">めくる</button>
       </div>
     </div>
 
@@ -155,13 +157,23 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
     </div>
 
     <div class="row">
+      <h2>めくる：ページ数</h2>
+      <div class="opts">
+        <button class="opt" data-set="pages" data-v="3">3ページ</button>
+        <button class="opt" data-set="pages" data-v="6">6ページ</button>
+        <button class="opt" data-set="pages" data-v="10">10ページ</button>
+      </div>
+      <p class="note">指1本で、ページのはしを左へなぞるとめくれます。右へなぞると、1枚戻れます。最後のページをめくると星が出て、少しして最初に戻ります。</p>
+    </div>
+
+    <div class="row">
       <h2>手助け（当たりの甘さ）</h2>
       <div class="opts">
         <button class="opt" data-set="assist" data-v="big">大きい</button>
         <button class="opt" data-set="assist" data-v="mid">ふつう</button>
         <button class="opt" data-set="assist" data-v="small">小さい</button>
       </div>
-      <p class="note">大きい：物をつかめる範囲が広く、容器の近くで離せば入ります。小さい：入れ口の真上で離さないと入りません。</p>
+      <p class="note">大きい：物をつかめる範囲が広く、容器の近くで離せば入ります。小さい：入れ口の真上で離さないと入りません。<br>めくる：大きい＝どこをさわっても、少しなぞれば（タップでも）めくれます。ふつう＝ページの右半分から、半分くらいなぞります。小さい＝ページの角から、大きくなぞります。</p>
     </div>
 
     <div class="row">
@@ -240,7 +252,7 @@ window.addEventListener('resize', resize);
 resize();
 
 // ---- 設定（保存しない）----
-const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pull: 'tissue', fingers: 'two', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
+const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pages: 6, pull: 'tissue', fingers: 'two', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
 // 見た目の強さ：edge＝ふちの線、glow＝入れ口の光、stars＝星、bits＝紙くず、light＝明かり
 const LOOK = {
   soft:   { edge: 0.14, lw: 1,   glow: 0.18, stars: 2, bits: 4,  light: 0.45 },
@@ -966,10 +978,305 @@ function drawChigiru(){
 }
 
 // =====================================================================
+// ---- めくる ----
+// 厚紙の絵本。指で、ページのはしを左へなぞると、紙のようにしなってめくれる。右へなぞると、1枚戻る。
+// ぜんぶめくると、おしまいのページ（星）が出て、少しして最初のページに戻る。
+const MK = { pos: 0, target: 0, page: 0, drag: null, endT: -1, fade: 0, fadeDir: 0, rustle: 0, kick: 0, key: '', cache: {} };
+const MKTHR = { big: 0.22, mid: 0.5, small: 0.62 };
+const MKTINT = ['#fbe9b8', '#fbdfe6', '#d7ebf6', '#fbe1dc', '#dcecf6', '#fff0b8', '#e3e0f4', '#dcf0e0', '#f6e3f0', '#fff3c2'];
+function bookGeom(){
+  const ph = Math.min(H * 0.72, W * 0.84 / 0.78), pw = ph * 0.78;
+  return { pw, ph, x: W / 2 - pw / 2 + pw * 0.02, y: H * 0.47 - ph / 2 };
+}
+function resetMk(){ MK.pos = MK.target = MK.page = 0; MK.drag = null; MK.endT = -1; MK.fade = 0; MK.fadeDir = 0; MK.kick = 0; MK.cache = {}; MK.key = ''; }
+// 紙の裏に描く絵のための道具（画面の外のキャンバスに描く）
+function rrG(g, x, y, w, h, r){
+  r = Math.min(r, w / 2, h / 2);
+  g.beginPath();
+  g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.quadraticCurveTo(x + w, y, x + w, y + r);
+  g.lineTo(x + w, y + h - r); g.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  g.lineTo(x + r, y + h); g.quadraticCurveTo(x, y + h, x, y + h - r);
+  g.lineTo(x, y + r); g.quadraticCurveTo(x, y, x + r, y);
+  g.closePath();
+}
+function smoothG(g, pts){
+  const n = pts.length, m0 = mid(pts[n - 1], pts[0]);
+  g.beginPath(); g.moveTo(m0.x, m0.y);
+  for (let i = 0; i < n; i++){ const a = pts[i], b = pts[(i + 1) % n], m = mid(a, b); g.quadraticCurveTo(a.x, a.y, m.x, m.y); }
+  g.closePath();
+}
+function blobG(g, x, y, rx, ry, seed, amp){
+  const n = 20, pts = [];
+  for (let i = 0; i < n; i++){ const a = i / n * Math.PI * 2, k = 1 + jit(seed * 17 + i) * amp; pts.push({ x: x + Math.cos(a) * rx * k, y: y + Math.sin(a) * ry * k }); }
+  smoothG(g, pts);
+}
+function inkG(g, s, fill){
+  g.fillStyle = fill; g.fill();
+  g.strokeStyle = edgeCol(); g.lineWidth = Math.max(1.5, s * 0.008 * LOOK[S.look].lw); g.lineJoin = 'round'; g.stroke();
+}
+function starPath(g, r0, r1){
+  g.beginPath();
+  for (let i = 0; i < 10; i++){ const r = i % 2 ? r1 : r0, a = -Math.PI / 2 + i * Math.PI / 5; i ? g.lineTo(Math.cos(a) * r, Math.sin(a) * r) : g.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
+  g.closePath();
+}
+// 絵10枚（s は、絵の大きさの半分）
+const PICS = [
+  // たいよう
+  (g, s) => {
+    for (let i = 0; i < 12; i++){
+      const a = i / 12 * Math.PI * 2, r0 = s * 0.5, r1 = s * (0.66 + (i % 2) * 0.08);
+      g.beginPath(); g.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); g.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
+      g.lineCap = 'round'; g.lineWidth = s * 0.07; g.strokeStyle = '#f2b84a'; g.stroke();
+    }
+    blobG(g, 0, 0, s * 0.38, s * 0.38, 3, 0.02);
+    const gr = g.createRadialGradient(-s * 0.12, -s * 0.12, 0, 0, 0, s * 0.42);
+    gr.addColorStop(0, '#fff3b8'); gr.addColorStop(1, '#f6d46a');
+    inkG(g, s, gr);
+  },
+  // おはな
+  (g, s) => {
+    g.beginPath(); g.moveTo(0, s * 0.78); g.quadraticCurveTo(s * 0.1, s * 0.4, 0, s * 0.1);
+    g.lineCap = 'round'; g.lineWidth = s * 0.07; g.strokeStyle = '#7fbf8f'; g.stroke();
+    [-1, 1].forEach(sg => { g.save(); g.translate(sg * s * 0.18, s * 0.5); g.rotate(-sg * 0.5); blobG(g, 0, 0, s * 0.17, s * 0.075, 5 + sg, 0.03); inkG(g, s, '#9fd6b0'); g.restore(); });
+    for (let i = 0; i < 6; i++){
+      g.save(); g.translate(0, -s * 0.28); g.rotate(i / 6 * Math.PI * 2); g.translate(0, -s * 0.26);
+      blobG(g, 0, 0, s * 0.15, s * 0.2, i + 7, 0.02); inkG(g, s, '#f4a9bd'); g.restore();
+    }
+    blobG(g, 0, -s * 0.28, s * 0.16, s * 0.16, 14, 0.02); inkG(g, s, '#f6d46a');
+  },
+  // さかな
+  (g, s) => {
+    g.beginPath(); g.moveTo(-s * 0.4, 0); g.lineTo(-s * 0.86, -s * 0.3); g.quadraticCurveTo(-s * 0.7, 0, -s * 0.86, s * 0.3); g.closePath(); inkG(g, s, '#6fb0da');
+    g.beginPath(); g.moveTo(-s * 0.05, -s * 0.26); g.lineTo(s * 0.12, -s * 0.5); g.lineTo(s * 0.22, -s * 0.24); g.closePath(); inkG(g, s, '#6fb0da');
+    blobG(g, 0, 0, s * 0.52, s * 0.3, 11, 0.02); inkG(g, s, '#8cc4e6');
+    g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = s * 0.025; g.lineCap = 'round';
+    [[-0.1, 0.02], [0.05, 0.1], [-0.12, 0.16]].forEach(([x, y]) => { g.beginPath(); g.arc(x * s, y * s, s * 0.09, 0.3, 2.6); g.stroke(); });
+    g.beginPath(); g.arc(s * 0.28, -s * 0.06, s * 0.075, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill();
+    g.beginPath(); g.arc(s * 0.3, -s * 0.06, s * 0.038, 0, Math.PI * 2); g.fillStyle = '#4a3a30'; g.fill();
+    [[0.62, -0.42, 0.05], [0.7, -0.6, 0.035], [0.56, -0.62, 0.028]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x * s, y * s, r * s, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.5)'; g.fill(); g.strokeStyle = 'rgba(110,160,190,.5)'; g.lineWidth = s * 0.012; g.stroke(); });
+  },
+  // りんご
+  (g, s) => {
+    g.beginPath(); g.moveTo(0, -s * 0.3); g.lineTo(s * 0.05, -s * 0.52); g.lineCap = 'round'; g.lineWidth = s * 0.05; g.strokeStyle = '#9a7556'; g.stroke();
+    g.save(); g.translate(s * 0.17, -s * 0.44); g.rotate(-0.5); blobG(g, 0, 0, s * 0.17, s * 0.08, 23, 0.03); inkG(g, s, '#9fd6b0'); g.restore();
+    blobG(g, 0, s * 0.08, s * 0.5, s * 0.44, 21, 0.02); inkG(g, s, '#ee8d8d');
+    g.beginPath(); g.ellipse(0, -s * 0.28, s * 0.08, s * 0.04, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(150,70,70,.35)'; g.fill();
+    g.save(); g.translate(-s * 0.24, -s * 0.02); g.rotate(-0.6); g.beginPath(); g.ellipse(0, 0, s * 0.07, s * 0.14, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.5)'; g.fill(); g.restore();
+  },
+  // くるま
+  (g, s) => {
+    rrG(g, -s * 0.7, -s * 0.02, s * 1.4, s * 0.42, s * 0.12); inkG(g, s, '#9ccbe6');
+    g.beginPath(); g.moveTo(-s * 0.46, -s * 0.02); g.lineTo(-s * 0.3, -s * 0.38); g.lineTo(s * 0.3, -s * 0.38); g.lineTo(s * 0.48, -s * 0.02); g.closePath(); inkG(g, s, '#9ccbe6');
+    g.beginPath(); g.moveTo(-s * 0.36, -s * 0.07); g.lineTo(-s * 0.25, -s * 0.31); g.lineTo(-s * 0.02, -s * 0.31); g.lineTo(-s * 0.02, -s * 0.07); g.closePath(); g.fillStyle = '#e8f4f8'; g.fill();
+    g.beginPath(); g.moveTo(s * 0.06, -s * 0.07); g.lineTo(s * 0.06, -s * 0.31); g.lineTo(s * 0.26, -s * 0.31); g.lineTo(s * 0.38, -s * 0.07); g.closePath(); g.fillStyle = '#e8f4f8'; g.fill();
+    [-1, 1].forEach(sg => {
+      g.beginPath(); g.arc(sg * s * 0.4, s * 0.4, s * 0.16, 0, Math.PI * 2); inkG(g, s, '#6e6a64');
+      g.beginPath(); g.arc(sg * s * 0.4, s * 0.4, s * 0.06, 0, Math.PI * 2); g.fillStyle = '#e8e2d6'; g.fill();
+    });
+    g.beginPath(); g.arc(s * 0.62, s * 0.1, s * 0.05, 0, Math.PI * 2); g.fillStyle = '#f6d46a'; g.fill();
+  },
+  // ほし
+  (g, s) => {
+    starPath(g, s * 0.66, s * 0.3); inkG(g, s, '#f6d46a');
+    [[-0.66, -0.5, 0.13, '#f4b8c4'], [0.7, -0.4, 0.1, '#a9d0ea'], [-0.56, 0.62, 0.1, '#a7dcc0'], [0.6, 0.66, 0.14, '#d3c0ec']].forEach(([x, y, r, c]) => {
+      g.save(); g.translate(x * s, y * s); starPath(g, r * s, r * s * 0.45); inkG(g, s, c); g.restore();
+    });
+  },
+  // つき
+  (g, s) => {
+    const R0 = s * 0.56, cx2 = s * 0.24, cy2 = -s * 0.12, r2 = s * 0.46;
+    g.save();
+    g.beginPath(); g.arc(0, 0, R0, 0, Math.PI * 2); g.clip();
+    g.beginPath(); g.rect(-s * 2, -s * 2, s * 4, s * 4); g.arc(cx2, cy2, r2, 0, Math.PI * 2, true); g.clip();
+    g.fillStyle = '#f6d46a'; g.fillRect(-s, -s, s * 2, s * 2);
+    g.strokeStyle = edgeCol(); g.lineWidth = Math.max(1.5, s * 0.008 * LOOK[S.look].lw) * 2;
+    g.beginPath(); g.arc(0, 0, R0, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.arc(cx2, cy2, r2, 0, Math.PI * 2); g.stroke();
+    g.restore();
+    [[0.5, -0.5, 0.1, '#f4b8c4'], [0.62, 0.1, 0.07, '#a9d0ea'], [0.42, 0.5, 0.09, '#d3c0ec']].forEach(([x, y, r, c]) => {
+      g.save(); g.translate(x * s, y * s); starPath(g, r * s, r * s * 0.45); inkG(g, s, c); g.restore();
+    });
+  },
+  // き
+  (g, s) => {
+    rrG(g, -s * 0.1, s * 0.1, s * 0.2, s * 0.62, s * 0.05); inkG(g, s, '#c9a074');
+    [[0, -0.36, 0.34], [-0.3, -0.12, 0.28], [0.3, -0.12, 0.28]].forEach(([x, y, r], i) => { blobG(g, x * s, y * s, r * s, r * s, 31 + i, 0.02); inkG(g, s, '#9fd6b0'); });
+    [[0.05, -0.4, 0.045], [-0.25, -0.12, 0.04], [0.28, -0.1, 0.045]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x * s, y * s, r * s, 0, Math.PI * 2); g.fillStyle = '#ee8d8d'; g.fill(); });
+  },
+  // ちょうちょ
+  (g, s) => {
+    [-1, 1].forEach(sg => {
+      g.save(); g.translate(sg * s * 0.05, -s * 0.12); g.rotate(sg * 0.4); blobG(g, sg * s * 0.3, 0, s * 0.3, s * 0.22, 41 + sg, 0.02); inkG(g, s, '#f4a9bd'); g.restore();
+      g.save(); g.translate(sg * s * 0.04, s * 0.1); g.rotate(-sg * 0.5); blobG(g, sg * s * 0.2, 0, s * 0.2, s * 0.16, 45 + sg, 0.02); inkG(g, s, '#d3c0ec'); g.restore();
+      g.beginPath(); g.arc(sg * s * 0.36, -s * 0.22, s * 0.05, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.7)'; g.fill();
+    });
+    blobG(g, 0, 0, s * 0.055, s * 0.3, 49, 0.02); inkG(g, s, '#8a6a52');
+    g.lineCap = 'round'; g.lineWidth = s * 0.02; g.strokeStyle = '#8a6a52';
+    [-1, 1].forEach(sg => { g.beginPath(); g.moveTo(0, -s * 0.28); g.quadraticCurveTo(sg * s * 0.05, -s * 0.5, sg * s * 0.16, -s * 0.52); g.stroke(); });
+  },
+  // バナナ
+  (g, s) => {
+    g.lineCap = 'round';
+    g.beginPath(); g.arc(0, -s * 0.22, s * 0.64, 0.2 * Math.PI, 0.8 * Math.PI);
+    g.lineWidth = s * 0.25 + Math.max(1.5, s * 0.008 * LOOK[S.look].lw) * 2; g.strokeStyle = edgeCol(); g.stroke();
+    g.lineWidth = s * 0.25; g.strokeStyle = '#f6d46a'; g.stroke();
+    g.beginPath(); g.arc(0, -s * 0.22, s * 0.58, 0.28 * Math.PI, 0.72 * Math.PI); g.lineWidth = s * 0.05; g.strokeStyle = 'rgba(255,255,255,.55)'; g.stroke();
+    [0.2, 0.8].forEach(k => { g.beginPath(); g.arc(Math.cos(k * Math.PI) * s * 0.64, -s * 0.22 + Math.sin(k * Math.PI) * s * 0.64, s * 0.05, 0, Math.PI * 2); g.fillStyle = '#8a6a52'; g.fill(); });
+  }
+];
+function renderPage(i, G){
+  const c = document.createElement('canvas');
+  c.width = Math.round(G.pw * DPR); c.height = Math.round(G.ph * DPR);
+  const g = c.getContext('2d'); g.scale(DPR, DPR);
+  const pw = G.pw, ph = G.ph, r = pw * 0.02, N = S.pages;
+  g.save(); rrG(g, 0, 0, pw, ph, r); g.fillStyle = '#fffaf0'; g.fill(); g.clip();
+  for (let k = 0; k < 160; k++){
+    g.fillStyle = k % 2 ? 'rgba(120,96,60,.05)' : 'rgba(255,255,255,.5)';
+    g.fillRect((jit(i * 313 + k) + 1) / 2 * pw, (jit(i * 131 + k * 7) + 1) / 2 * ph, 2, 2);
+  }
+  const sz = Math.min(pw, ph) * 0.5 * 0.86;
+  if (i < N){
+    blobG(g, pw / 2, ph * 0.5, pw * 0.44, ph * 0.3, i + 3, 0.05); g.fillStyle = MKTINT[i % MKTINT.length]; g.globalAlpha = 0.7; g.fill(); g.globalAlpha = 1;
+    g.save(); g.translate(pw / 2, ph * 0.5); PICS[i % PICS.length](g, sz); g.restore();
+  } else {
+    const gr = g.createLinearGradient(0, 0, 0, ph); gr.addColorStop(0, '#fbe3e8'); gr.addColorStop(1, '#fff6e0');
+    g.fillStyle = gr; g.fillRect(0, 0, pw, ph);
+    g.save(); g.translate(pw / 2, ph * 0.46); starPath(g, sz * 0.62, sz * 0.3); inkG(g, sz, '#f6d46a');
+    [[-0.66, -0.55, 0.12, '#f4b8c4'], [0.68, -0.45, 0.1, '#a9d0ea'], [-0.56, 0.62, 0.1, '#a7dcc0'], [0.6, 0.66, 0.13, '#d3c0ec']].forEach(([x, y, rr, col]) => {
+      g.save(); g.translate(x * sz, y * sz); starPath(g, rr * sz, rr * sz * 0.45); inkG(g, sz, col); g.restore();
+    });
+    g.restore();
+  }
+  g.restore();
+  rrG(g, 0.75, 0.75, pw - 1.5, ph - 1.5, r); g.strokeStyle = 'rgba(120,96,60,.22)'; g.lineWidth = 1.5; g.stroke();
+  return c;
+}
+function pageCanvas(i, G){
+  const key = [Math.round(G.pw), Math.round(G.ph), DPR, S.look, S.pages].join();
+  if (MK.key !== key){ MK.key = key; MK.cache = {}; }
+  return MK.cache[i] || (MK.cache[i] = renderPage(i, G));
+}
+function drawFlip(i, a, G){
+  const N = 28, pc = pageCanvas(i, G), W0 = pc.width, H0 = pc.height;
+  const th = u => Math.min(Math.PI, a * (0.78 + 0.22 * u));       // 自由なはしほど、よく曲がる
+  const xs = [0];
+  for (let j = 1; j <= N; j++) xs.push(xs[j - 1] + Math.cos(th((j - 0.5) / N)) * G.pw / N);
+  // いま下にある次のページに、めくっている紙の影を落とす
+  const xmax = Math.max(...xs);
+  ctx.save(); ctx.beginPath(); ctx.rect(G.x, G.y, G.pw, G.ph); ctx.clip();
+  const sh = ctx.createLinearGradient(G.x + xmax, 0, G.x + xmax + G.pw * 0.16, 0);
+  sh.addColorStop(0, 'rgba(70,48,24,' + (0.22 * Math.sin(a)).toFixed(3) + ')'); sh.addColorStop(1, 'rgba(70,48,24,0)');
+  ctx.fillStyle = sh; ctx.fillRect(G.x + xmax, G.y, G.pw * 0.16, G.ph);
+  ctx.restore();
+  // 表（絵のある側）→ 裏（うら返った側）の順に、細い帯をならべて描く
+  for (let j = 0; j < N; j++){
+    const t = th((j + 0.5) / N); if (t >= Math.PI / 2) continue;
+    const vs = 1 + 0.045 * Math.sin(t), h = G.ph * vs, y0 = G.y + (G.ph - h) / 2;
+    const x0 = G.x + xs[j], w = G.x + xs[j + 1] - x0; if (w <= 0.05) continue;
+    ctx.drawImage(pc, j * W0 / N, 0, W0 / N, H0, x0, y0, w + 1, h);
+    ctx.fillStyle = 'rgba(70,48,24,' + (0.26 * Math.pow(Math.sin(t), 1.3)).toFixed(3) + ')'; ctx.fillRect(x0, y0, w + 1, h);
+  }
+  for (let j = 0; j < N; j++){
+    const t = th((j + 0.5) / N); if (t < Math.PI / 2) continue;
+    const vs = 1 + 0.045 * Math.sin(t), h = G.ph * vs, y0 = G.y + (G.ph - h) / 2;
+    const xa = G.x + xs[j], xb = G.x + xs[j + 1], l = Math.min(xa, xb), w = Math.abs(xb - xa);
+    ctx.fillStyle = '#f1e7d2'; ctx.fillRect(l, y0, w + 1, h);
+    ctx.fillStyle = 'rgba(70,48,24,' + (0.2 * Math.sin(t)).toFixed(3) + ')'; ctx.fillRect(l, y0, w + 1, h);
+  }
+}
+function drawMekuru(){
+  const G = bookGeom(), N = S.pages;
+  ctx.save(); ctx.globalAlpha = 1 - MK.fade;
+  ctx.beginPath(); ctx.ellipse(G.x + G.pw / 2 + U * 0.01, G.y + G.ph + U * 0.012, G.pw * 0.55, U * 0.025, 0, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(90,64,40,.13)'; ctx.fill();
+  const k0 = Math.min(N, Math.floor(MK.pos + 1e-6)), frac = k0 >= N ? 0 : MK.pos - k0;
+  // 下に重なった紙のふち
+  for (let d = Math.min(3, N - k0); d >= 1; d--){
+    rrect(G.x + d * U * 0.006, G.y + d * U * 0.006, G.pw, G.ph, G.pw * 0.02);
+    ctx.fillStyle = d % 2 ? '#f5ecda' : '#efe4cd'; ctx.fill(); ctx.strokeStyle = 'rgba(120,96,60,.22)'; ctx.lineWidth = 1.2; ctx.stroke();
+  }
+  if (frac < 0.002) ctx.drawImage(pageCanvas(k0, G), G.x, G.y, G.pw, G.ph);
+  else { ctx.drawImage(pageCanvas(k0 + 1, G), G.x, G.y, G.pw, G.ph); drawFlip(k0, frac * Math.PI, G); }
+  // 背（ホチキスどめ）
+  rrect(G.x - 8, G.y, 10, G.ph, 4); ctx.fillStyle = '#e3cfa6'; ctx.fill(); ctx.strokeStyle = edgeCol(); ctx.lineWidth = edgeW(); ctx.stroke();
+  [0.18, 0.5, 0.82].forEach(f => { ctx.fillStyle = '#b9b2a4'; ctx.fillRect(G.x - 9, G.y + G.ph * f - 1.5, 12, 3); });
+  ctx.restore();
+}
+function updMekuru(dt){
+  const N = S.pages, prev = MK.pos;
+  if (!MK.drag){
+    if (MK.pos !== MK.target){
+      MK.pos += (MK.target - MK.pos) * (1 - Math.exp(-dt / 0.1));
+      if (Math.abs(MK.target - MK.pos) < 0.02) MK.pos = MK.target;
+    }
+    if (MK.pos === MK.target && MK.page !== MK.target){
+      const fwd = MK.target > MK.page; MK.page = MK.target;
+      if (fwd){
+        MK.kick = 0.5;
+        if (MK.page >= N){
+          MK.endT = 0; const G = bookGeom();
+          addStars(G.x + G.pw / 2, G.y + G.ph * 0.45, G.pw * 0.45, LOOK[S.look].stars + 2);
+          bell(0.035); setTimeout(() => bell(0.03), 160); setTimeout(() => bell(0.028), 320);
+        } else bell(0.028);
+      } else { MK.kick = 0.3; ping(440, 0.025, 0.5, 2.2); }
+    }
+  }
+  // おしまいのあと：そっと消えて、最初のページに戻る
+  if (MK.endT >= 0){ MK.endT += dt; if (MK.fadeDir === 0 && MK.endT > 2.4) MK.fadeDir = 1; }
+  if (MK.fadeDir === 1){
+    MK.fade += dt / 0.6;
+    if (MK.fade >= 1){ MK.fade = 1; MK.pos = MK.target = MK.page = 0; MK.endT = -1; MK.fadeDir = -1; }
+  } else if (MK.fadeDir === -1){
+    MK.fade -= dt / 0.6;
+    if (MK.fade <= 0){ MK.fade = 0; MK.fadeDir = 0; }
+  }
+  const sp = Math.abs(MK.pos - prev) / Math.max(dt, 0.001);
+  MK.rustle = Math.max(clamp(sp * 0.25, 0, 0.8), MK.kick); MK.kick *= Math.exp(-dt * 7);
+}
+// どこからつかんでよいか（手助けの強さで変わる）
+function mkZones(p, G){
+  if (S.assist === 'big') return { R: true, L: true };
+  const rx = (p.x - G.x) / G.pw, ry = (p.y - G.y) / G.ph;
+  if (rx < -0.05 || rx > 1.05 || ry < -0.05 || ry > 1.05) return { R: false, L: false };
+  if (S.assist === 'mid') return { R: rx > 0.45, L: rx < 0.55 };
+  const corner = ry < 0.3 || ry > 0.7;
+  return { R: rx > 0.65 && corner, L: rx < 0.35 && corner };
+}
+function mkDown(id, p){
+  if (MK.endT >= 0 || MK.fadeDir !== 0 || MK.fade > 0.01) return;
+  if (MK.pos !== MK.target || MK.pos !== MK.page) return;      // 動いている間はつかめない
+  const z = mkZones(p, bookGeom());
+  if (!z.R && !z.L) return;
+  MK.drag = { id, sx: p.x, sy: p.y, t0: performance.now(), dir: 0, p0: MK.page, z };
+}
+function mkMove(id, p){
+  const d = MK.drag; if (!d || d.id !== id) return;
+  const G = bookGeom(), dx = p.x - d.sx;
+  if (d.dir === 0){
+    if (Math.abs(dx) < 10) return;
+    const dir = dx < 0 ? 1 : -1;
+    const ok = dir === 1 ? (d.z.R && d.p0 < S.pages) : (d.z.L && d.p0 > 0);
+    if (!ok){ MK.drag = null; return; }
+    d.dir = dir;
+  }
+  MK.pos = d.p0 + d.dir * clamp(-dx * d.dir / (G.pw * 0.85), 0, 1);
+}
+function mkUp(id){
+  const d = MK.drag; if (!d || d.id !== id) return;
+  MK.drag = null;
+  let tgt = d.p0;
+  if (d.dir === 0){
+    if (S.assist === 'big' && d.p0 < S.pages && performance.now() - d.t0 < 500) tgt = d.p0 + 1;     // タップでもめくれる
+  } else if (Math.abs(MK.pos - d.p0) >= MKTHR[S.assist]) tgt = d.p0 + d.dir;
+  MK.target = tgt;
+}
+
+// =====================================================================
 // ---- 指の入力 ----
 const ptrs = new Map();
 function pos(e){ const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 function maxPtrs(){
+  if (S.scene === 'mekuru') return 1;
   if (S.scene === 'chigiru') return S.fingers === 'two' ? 2 : 1;
   return S.firstOnly ? 1 : 5;
 }
@@ -980,6 +1287,7 @@ cv.addEventListener('pointerdown', e => {
   try { cv.setPointerCapture(e.pointerId); } catch (_){}
   if (S.scene === 'ireru') irDown(e.pointerId, p);
   else if (S.scene === 'hipparu') hpDown(e.pointerId, p);
+  else if (S.scene === 'mekuru') mkDown(e.pointerId, p);
   else cgDown(e.pointerId, p);
 });
 cv.addEventListener('pointermove', e => {
@@ -987,6 +1295,7 @@ cv.addEventListener('pointermove', e => {
   const p = pos(e); q.x = p.x; q.y = p.y;
   if (S.scene === 'ireru') irMove(e.pointerId, p);
   else if (S.scene === 'hipparu') hpMove(e.pointerId, p);
+  else if (S.scene === 'mekuru') mkMove(e.pointerId, p);
   else cgMove(e.pointerId, p);
 });
 function ptrUp(e){
@@ -994,6 +1303,7 @@ function ptrUp(e){
   ptrs.delete(e.pointerId);
   if (S.scene === 'ireru') irUp(e.pointerId);
   else if (S.scene === 'hipparu') hpUp(e.pointerId);
+  else if (S.scene === 'mekuru') mkUp(e.pointerId);
   else cgUp(e.pointerId);
 }
 cv.addEventListener('pointerup', ptrUp);
@@ -1007,9 +1317,10 @@ function cancelAll(){
   IR.drags.forEach(o => { o.st = 'free'; }); IR.drags.clear();
   if (CG.tear){ CG.relax = CG.tear; CG.tear = null; }
   CG.pend = null; CG.used.clear();
+  if (MK.drag){ MK.target = MK.drag.p0; MK.drag = null; }
   setRustle(0);
 }
-function resetScenes(){ stars.length = 0; resetIreru(); resetHip(); newSheet(); CG.bits.length = 0; }
+function resetScenes(){ stars.length = 0; resetIreru(); resetHip(); newSheet(); CG.bits.length = 0; resetMk(); }
 
 // ---- 背景のにじみ ----
 const WASH = [
@@ -1039,18 +1350,21 @@ function frame(now){
     T += dt;
     if (S.scene === 'ireru') updIreru(dt);
     else if (S.scene === 'hipparu') updHip(dt);
+    else if (S.scene === 'mekuru') updMekuru(dt);
     else updChigiru(dt);
     updStars(dt);
   }
   // 紙の音
   if (S.scene === 'hipparu' && S.pull === 'tissue') setRustle(Math.max(clamp(HP.spd / (U * 2.5), 0, 0.9), HP.kick * 0.8), 1100);
   else if (S.scene === 'chigiru') setRustle(CG.rustle || 0, 2300);
+  else if (S.scene === 'mekuru') setRustle(MK.rustle || 0, 2600);
   else setRustle(0);
   ctx.fillStyle = '#f6eddc'; ctx.fillRect(0, 0, W, H);
   if (paper) ctx.drawImage(paper, 0, 0, W, H);
   drawWash();
   if (S.scene === 'ireru') drawIreru();
   else if (S.scene === 'hipparu'){ if (S.pull === 'tissue') drawTissueBox(); else drawLamp(); }
+  else if (S.scene === 'mekuru') drawMekuru();
   else drawChigiru();
   drawStars();
   if (dusk > 0.001){
@@ -1086,7 +1400,7 @@ gear.addEventListener('pointerdown', e => {
 gear.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openPanel(); } });
 
 function markOpts(){
-  const cur = { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pull: S.pull, fingers: S.fingers, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, sound: S.sound ? 'on' : 'off' };
+  const cur = { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pages: String(S.pages), pull: S.pull, fingers: S.fingers, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, sound: S.sound ? 'on' : 'off' };
   document.querySelectorAll('#panel [data-set]').forEach(b => b.setAttribute('aria-pressed', String(cur[b.dataset.set] === b.dataset.v)));
 }
 const volEl = $('vol');
@@ -1100,6 +1414,7 @@ $('panel').addEventListener('click', e => {
     if (k === 'obj'){ S.obj = v; resetIreru(); }
     if (k === 'mouth'){ S.mouth = v; resetIreru(); }
     if (k === 'count'){ S.count = Number(v); resetIreru(); }
+    if (k === 'pages'){ S.pages = Number(v); resetMk(); }
     if (k === 'pull'){ S.pull = v; resetHip(); }
     if (k === 'fingers'){ S.fingers = v; CG.tear = null; CG.pend = null; }
     if (k === 'assist') S.assist = v;
