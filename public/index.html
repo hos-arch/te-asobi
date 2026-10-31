@@ -160,8 +160,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
       <h2>めくる：ページ数</h2>
       <div class="opts">
         <button class="opt" data-set="pages" data-v="3">3ページ</button>
-        <button class="opt" data-set="pages" data-v="6">6ページ</button>
-        <button class="opt" data-set="pages" data-v="10">10ページ</button>
+        <button class="opt" data-set="pages" data-v="5">5ページ</button>
       </div>
       <p class="note">指1本で、ページのはしを左へなぞるとめくれます。右へなぞると、1枚戻れます。最後のページをめくると星が出て、少しして最初に戻ります。</p>
     </div>
@@ -252,7 +251,7 @@ window.addEventListener('resize', resize);
 resize();
 
 // ---- 設定（保存しない）----
-const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pages: 6, pull: 'tissue', fingers: 'two', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
+const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pages: 5, pull: 'tissue', fingers: 'two', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
 // 見た目の強さ：edge＝ふちの線、glow＝入れ口の光、stars＝星、bits＝紙くず、light＝明かり
 const LOOK = {
   soft:   { edge: 0.14, lw: 1,   glow: 0.18, stars: 2, bits: 4,  light: 0.45 },
@@ -983,7 +982,7 @@ function drawChigiru(){
 // ぜんぶめくると、おしまいのページ（星）が出て、少しして最初のページに戻る。
 const MK = { pos: 0, target: 0, page: 0, drag: null, endT: -1, fade: 0, fadeDir: 0, rustle: 0, kick: 0, key: '', cache: {} };
 const MKTHR = { big: 0.22, mid: 0.5, small: 0.62 };
-const MKTINT = ['#fbe9b8', '#fbdfe6', '#d7ebf6', '#fbe1dc', '#dcecf6', '#fff0b8', '#e3e0f4', '#dcf0e0', '#f6e3f0', '#fff3c2'];
+const MKTINT = ['#dcecf6', '#fbe1dc', '#fff3c2', '#d7ebf6', '#fbdfe6'];   // くるま、りんご、バナナ、さかな、おはな
 function bookGeom(){
   const ph = Math.min(H * 0.72, W * 0.84 / 0.78), pw = ph * 0.78;
   return { pw, ph, x: W / 2 - pw / 2 + pw * 0.02, y: H * 0.47 - ph / 2 };
@@ -1019,50 +1018,8 @@ function starPath(g, r0, r1){
   for (let i = 0; i < 10; i++){ const r = i % 2 ? r1 : r0, a = -Math.PI / 2 + i * Math.PI / 5; i ? g.lineTo(Math.cos(a) * r, Math.sin(a) * r) : g.moveTo(Math.cos(a) * r, Math.sin(a) * r); }
   g.closePath();
 }
-// 絵10枚（s は、絵の大きさの半分）
+// 絵5枚（ふだん手にふれる物に近い順。s は、絵の大きさの半分）
 const PICS = [
-  // たいよう
-  (g, s) => {
-    for (let i = 0; i < 12; i++){
-      const a = i / 12 * Math.PI * 2, r0 = s * 0.5, r1 = s * (0.66 + (i % 2) * 0.08);
-      g.beginPath(); g.moveTo(Math.cos(a) * r0, Math.sin(a) * r0); g.lineTo(Math.cos(a) * r1, Math.sin(a) * r1);
-      g.lineCap = 'round'; g.lineWidth = s * 0.07; g.strokeStyle = '#f2b84a'; g.stroke();
-    }
-    blobG(g, 0, 0, s * 0.38, s * 0.38, 3, 0.02);
-    const gr = g.createRadialGradient(-s * 0.12, -s * 0.12, 0, 0, 0, s * 0.42);
-    gr.addColorStop(0, '#fff3b8'); gr.addColorStop(1, '#f6d46a');
-    inkG(g, s, gr);
-  },
-  // おはな
-  (g, s) => {
-    g.beginPath(); g.moveTo(0, s * 0.78); g.quadraticCurveTo(s * 0.1, s * 0.4, 0, s * 0.1);
-    g.lineCap = 'round'; g.lineWidth = s * 0.07; g.strokeStyle = '#7fbf8f'; g.stroke();
-    [-1, 1].forEach(sg => { g.save(); g.translate(sg * s * 0.18, s * 0.5); g.rotate(-sg * 0.5); blobG(g, 0, 0, s * 0.17, s * 0.075, 5 + sg, 0.03); inkG(g, s, '#9fd6b0'); g.restore(); });
-    for (let i = 0; i < 6; i++){
-      g.save(); g.translate(0, -s * 0.28); g.rotate(i / 6 * Math.PI * 2); g.translate(0, -s * 0.26);
-      blobG(g, 0, 0, s * 0.15, s * 0.2, i + 7, 0.02); inkG(g, s, '#f4a9bd'); g.restore();
-    }
-    blobG(g, 0, -s * 0.28, s * 0.16, s * 0.16, 14, 0.02); inkG(g, s, '#f6d46a');
-  },
-  // さかな
-  (g, s) => {
-    g.beginPath(); g.moveTo(-s * 0.4, 0); g.lineTo(-s * 0.86, -s * 0.3); g.quadraticCurveTo(-s * 0.7, 0, -s * 0.86, s * 0.3); g.closePath(); inkG(g, s, '#6fb0da');
-    g.beginPath(); g.moveTo(-s * 0.05, -s * 0.26); g.lineTo(s * 0.12, -s * 0.5); g.lineTo(s * 0.22, -s * 0.24); g.closePath(); inkG(g, s, '#6fb0da');
-    blobG(g, 0, 0, s * 0.52, s * 0.3, 11, 0.02); inkG(g, s, '#8cc4e6');
-    g.strokeStyle = 'rgba(255,255,255,.55)'; g.lineWidth = s * 0.025; g.lineCap = 'round';
-    [[-0.1, 0.02], [0.05, 0.1], [-0.12, 0.16]].forEach(([x, y]) => { g.beginPath(); g.arc(x * s, y * s, s * 0.09, 0.3, 2.6); g.stroke(); });
-    g.beginPath(); g.arc(s * 0.28, -s * 0.06, s * 0.075, 0, Math.PI * 2); g.fillStyle = '#ffffff'; g.fill();
-    g.beginPath(); g.arc(s * 0.3, -s * 0.06, s * 0.038, 0, Math.PI * 2); g.fillStyle = '#4a3a30'; g.fill();
-    [[0.62, -0.42, 0.05], [0.7, -0.6, 0.035], [0.56, -0.62, 0.028]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x * s, y * s, r * s, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.5)'; g.fill(); g.strokeStyle = 'rgba(110,160,190,.5)'; g.lineWidth = s * 0.012; g.stroke(); });
-  },
-  // りんご
-  (g, s) => {
-    g.beginPath(); g.moveTo(0, -s * 0.3); g.lineTo(s * 0.05, -s * 0.52); g.lineCap = 'round'; g.lineWidth = s * 0.05; g.strokeStyle = '#9a7556'; g.stroke();
-    g.save(); g.translate(s * 0.17, -s * 0.44); g.rotate(-0.5); blobG(g, 0, 0, s * 0.17, s * 0.08, 23, 0.03); inkG(g, s, '#9fd6b0'); g.restore();
-    blobG(g, 0, s * 0.08, s * 0.5, s * 0.44, 21, 0.02); inkG(g, s, '#ee8d8d');
-    g.beginPath(); g.ellipse(0, -s * 0.28, s * 0.08, s * 0.04, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(150,70,70,.35)'; g.fill();
-    g.save(); g.translate(-s * 0.24, -s * 0.02); g.rotate(-0.6); g.beginPath(); g.ellipse(0, 0, s * 0.07, s * 0.14, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.5)'; g.fill(); g.restore();
-  },
   // くるま
   (g, s) => {
     rrG(g, -s * 0.7, -s * 0.02, s * 1.4, s * 0.42, s * 0.12); inkG(g, s, '#9ccbe6');
@@ -1075,53 +1032,28 @@ const PICS = [
     });
     g.beginPath(); g.arc(s * 0.62, s * 0.1, s * 0.05, 0, Math.PI * 2); g.fillStyle = '#f6d46a'; g.fill();
   },
-  // ほし
+  // りんご
   (g, s) => {
-    starPath(g, s * 0.66, s * 0.3); inkG(g, s, '#f6d46a');
-    [[-0.66, -0.5, 0.13, '#f4b8c4'], [0.7, -0.4, 0.1, '#a9d0ea'], [-0.56, 0.62, 0.1, '#a7dcc0'], [0.6, 0.66, 0.14, '#d3c0ec']].forEach(([x, y, r, c]) => {
-      g.save(); g.translate(x * s, y * s); starPath(g, r * s, r * s * 0.45); inkG(g, s, c); g.restore();
-    });
-  },
-  // つき
-  (g, s) => {
-    const R0 = s * 0.56, cx2 = s * 0.24, cy2 = -s * 0.12, r2 = s * 0.46;
-    g.save();
-    g.beginPath(); g.arc(0, 0, R0, 0, Math.PI * 2); g.clip();
-    g.beginPath(); g.rect(-s * 2, -s * 2, s * 4, s * 4); g.arc(cx2, cy2, r2, 0, Math.PI * 2, true); g.clip();
-    g.fillStyle = '#f6d46a'; g.fillRect(-s, -s, s * 2, s * 2);
-    g.strokeStyle = edgeCol(); g.lineWidth = Math.max(1.5, s * 0.008 * LOOK[S.look].lw) * 2;
-    g.beginPath(); g.arc(0, 0, R0, 0, Math.PI * 2); g.stroke();
-    g.beginPath(); g.arc(cx2, cy2, r2, 0, Math.PI * 2); g.stroke();
-    g.restore();
-    [[0.5, -0.5, 0.1, '#f4b8c4'], [0.62, 0.1, 0.07, '#a9d0ea'], [0.42, 0.5, 0.09, '#d3c0ec']].forEach(([x, y, r, c]) => {
-      g.save(); g.translate(x * s, y * s); starPath(g, r * s, r * s * 0.45); inkG(g, s, c); g.restore();
-    });
-  },
-  // き
-  (g, s) => {
-    rrG(g, -s * 0.1, s * 0.1, s * 0.2, s * 0.62, s * 0.05); inkG(g, s, '#c9a074');
-    [[0, -0.36, 0.34], [-0.3, -0.12, 0.28], [0.3, -0.12, 0.28]].forEach(([x, y, r], i) => { blobG(g, x * s, y * s, r * s, r * s, 31 + i, 0.02); inkG(g, s, '#9fd6b0'); });
-    [[0.05, -0.4, 0.045], [-0.25, -0.12, 0.04], [0.28, -0.1, 0.045]].forEach(([x, y, r]) => { g.beginPath(); g.arc(x * s, y * s, r * s, 0, Math.PI * 2); g.fillStyle = '#ee8d8d'; g.fill(); });
-  },
-  // ちょうちょ
-  (g, s) => {
-    [-1, 1].forEach(sg => {
-      g.save(); g.translate(sg * s * 0.05, -s * 0.12); g.rotate(sg * 0.4); blobG(g, sg * s * 0.3, 0, s * 0.3, s * 0.22, 41 + sg, 0.02); inkG(g, s, '#f4a9bd'); g.restore();
-      g.save(); g.translate(sg * s * 0.04, s * 0.1); g.rotate(-sg * 0.5); blobG(g, sg * s * 0.2, 0, s * 0.2, s * 0.16, 45 + sg, 0.02); inkG(g, s, '#d3c0ec'); g.restore();
-      g.beginPath(); g.arc(sg * s * 0.36, -s * 0.22, s * 0.05, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.7)'; g.fill();
-    });
-    blobG(g, 0, 0, s * 0.055, s * 0.3, 49, 0.02); inkG(g, s, '#8a6a52');
-    g.lineCap = 'round'; g.lineWidth = s * 0.02; g.strokeStyle = '#8a6a52';
-    [-1, 1].forEach(sg => { g.beginPath(); g.moveTo(0, -s * 0.28); g.quadraticCurveTo(sg * s * 0.05, -s * 0.5, sg * s * 0.16, -s * 0.52); g.stroke(); });
+    g.beginPath(); g.moveTo(0, -s * 0.3); g.lineTo(s * 0.05, -s * 0.52); g.lineCap = 'round'; g.lineWidth = s * 0.05; g.strokeStyle = '#9a7556'; g.stroke();
+    g.save(); g.translate(s * 0.17, -s * 0.44); g.rotate(-0.5); blobG(g, 0, 0, s * 0.17, s * 0.08, 23, 0.03); inkG(g, s, '#9fd6b0'); g.restore();
+    blobG(g, 0, s * 0.08, s * 0.5, s * 0.44, 21, 0.02); inkG(g, s, '#ee8d8d');
+    g.beginPath(); g.ellipse(0, -s * 0.28, s * 0.08, s * 0.04, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(150,70,70,.35)'; g.fill();
+    g.save(); g.translate(-s * 0.24, -s * 0.02); g.rotate(-0.6); g.beginPath(); g.ellipse(0, 0, s * 0.07, s * 0.14, 0, 0, Math.PI * 2); g.fillStyle = 'rgba(255,255,255,.5)'; g.fill(); g.restore();
   },
   // バナナ
   (g, s) => {
-    g.lineCap = 'round';
-    g.beginPath(); g.arc(0, -s * 0.22, s * 0.64, 0.2 * Math.PI, 0.8 * Math.PI);
-    g.lineWidth = s * 0.25 + Math.max(1.5, s * 0.008 * LOOK[S.look].lw) * 2; g.strokeStyle = edgeCol(); g.stroke();
-    g.lineWidth = s * 0.25; g.strokeStyle = '#f6d46a'; g.stroke();
-    g.beginPath(); g.arc(0, -s * 0.22, s * 0.58, 0.28 * Math.PI, 0.72 * Math.PI); g.lineWidth = s * 0.05; g.strokeStyle = 'rgba(255,255,255,.55)'; g.stroke();
-    [0.2, 0.8].forEach(k => { g.beginPath(); g.arc(Math.cos(k * Math.PI) * s * 0.64, -s * 0.22 + Math.sin(k * Math.PI) * s * 0.64, s * 0.05, 0, Math.PI * 2); g.fillStyle = '#8a6a52'; g.fill(); });
+    g.save(); g.rotate(-0.35); g.translate(0, s * 0.02); g.lineCap = 'round';
+    const cy0 = -s * 0.3, r0 = s * 0.78, a0 = 0.17 * Math.PI, a1 = 0.83 * Math.PI, w0 = s * 0.34;
+    g.beginPath(); g.arc(0, cy0, r0, a0, a1);
+    g.lineWidth = w0 + Math.max(1.5, s * 0.008 * LOOK[S.look].lw) * 2; g.strokeStyle = edgeCol(); g.stroke();
+    g.lineWidth = w0; g.strokeStyle = '#f6d46a'; g.stroke();
+    g.beginPath(); g.arc(0, cy0, r0 + w0 * 0.22, a0 + 0.06, a1 - 0.06); g.lineWidth = s * 0.05; g.strokeStyle = 'rgba(255,255,255,.55)'; g.stroke();
+    g.beginPath(); g.arc(0, cy0, r0 - w0 * 0.28, a0 + 0.06, a1 - 0.06); g.lineWidth = s * 0.03; g.strokeStyle = 'rgba(200,150,50,.35)'; g.stroke();
+    // へた（上）と、先（下）
+    const ex = Math.cos(a1) * r0, ey = cy0 + Math.sin(a1) * r0, fx = Math.cos(a0) * r0, fy = cy0 + Math.sin(a0) * r0;
+    g.beginPath(); g.moveTo(ex, ey); g.lineTo(ex - s * 0.05, ey - s * 0.17); g.lineWidth = s * 0.1; g.strokeStyle = '#8a6a52'; g.stroke();
+    g.beginPath(); g.arc(fx + s * 0.02, fy + s * 0.01, s * 0.06, 0, Math.PI * 2); g.fillStyle = '#8a6a52'; g.fill();
+    g.restore();
   }
 ];
 function renderPage(i, G){
