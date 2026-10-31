@@ -46,7 +46,7 @@ canvas{display:block;width:100%;height:100%;touch-action:none}
 .note{font-size:13px;line-height:1.6;margin:0;color:#6e6552}
 .row{display:flex;flex-direction:column;gap:8px}
 .row h2{font-size:14px;margin:0;color:#5a5040;font-weight:600}
-.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(68px,1fr));gap:8px}
 .opt{font:inherit;font-size:16px;min-height:50px;padding:6px 8px;border-radius:12px;border:1.5px solid #cdbf9f;background:#fffdf8;color:#3a3326;cursor:pointer}
 .opt[aria-pressed="true"]{background:#4a6442;border-color:#4a6442;color:#fff}
 .opt.wide{grid-column:1/-1}
@@ -58,6 +58,36 @@ input[type=range]{width:100%;accent-color:#4a6442}
 .meter i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#9fcbb2,#6fa6c8 60%,#4a6442)}
 .meter span{position:absolute;inset:0;display:flex;align-items:center;padding:0 10px;font-size:14px;font-weight:600}
 button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offset:2px}
+.opts.five{grid-template-columns:repeat(5,1fr);gap:6px}
+.opts.five .opt{font-size:15px;padding:6px 2px}
+.opts.four{grid-template-columns:repeat(4,1fr)}
+.group{display:flex;flex-direction:column;gap:12px;padding:14px 14px 16px;border-radius:16px;background:#f4ecda}
+.group > h2{font-size:13px;margin:0;color:#7a6e55;font-weight:700;letter-spacing:.06em}
+.row h3{font-size:14px;margin:0;color:#5a5040;font-weight:600}
+[data-only]{display:none}
+[data-only].on{display:flex}
+.more{font:inherit;display:flex;align-items:center;gap:10px;min-height:52px;padding:8px 14px;border-radius:14px;border:1.5px dashed #cdbf9f;background:transparent;color:#3a3326;cursor:pointer;text-align:left}
+.more .caret{display:inline-block;font-size:14px;transition:transform .2s}
+.more[aria-expanded="true"] .caret{transform:rotate(90deg)}
+.more b{font-size:16px;font-weight:700}
+.more small{display:block;font-size:12px;color:#7a6e55;line-height:1.4}
+.more small.mark{color:#4a6442;font-weight:600}
+#more{display:none;flex-direction:column;gap:14px}
+#more.open{display:flex}
+.foot{display:grid;grid-template-columns:1fr 1.6fr;gap:10px;margin-top:4px}
+.undo{font:inherit;font-size:15px;min-height:52px;border-radius:12px;border:1.5px solid #cdbf9f;background:#fffdf8;color:#3a3326;cursor:pointer}
+.undo:disabled{opacity:.4;cursor:default}
+.sheet .close{min-height:52px}
+.opt,.undo{white-space:nowrap}
+@media (max-width:440px){
+  #panel{padding:8px}
+  .sheet{padding:18px 12px;gap:14px}
+  .group{padding:12px 10px 14px}
+  .opt{padding:6px 2px}
+  .opts.five{gap:4px}
+  .opts.five .opt{font-size:clamp(12px,3.6vw,15px);letter-spacing:-.02em}
+}
+@media (max-width:350px){ .group .opt, #more .opt, .undo{font-size:14px} .foot{grid-template-columns:1fr 1.3fr} }
 </style>
 </head>
 <body>
@@ -78,8 +108,8 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
     <h2>気をつけること</h2>
     <ul>
       <li>画面では、握る力や、どの指でつまんでいるかは分かりません。つまみ方は、大人が見てください。</li>
-      <li>手のひら全体で画面に触れてしまう子は、設定の「最初に触れた指だけ」を選んでください。</li>
-      <li>2本の指で紙をちぎるのが難しい子は、設定で「1本の指で」を選んでください。</li>
+      <li>手のひら全体で画面に触れてしまう子は、設定の「くわしく」で、触れ方を「最初の指だけ」にしてください。</li>
+      <li>2本の指で紙をちぎるのが難しい子は、「ちぎる」の指を「1本」にしてください。</li>
       <li>「とおす」は、ビーズを指でつまんで、ワイヤーに沿って動かします。2本の指でつまむ設定もあります。本物のビーズコースター（ワイヤーとビーズの玩具）と組み合わせると、わかりやすくなります。</li>
       <li>「めくる」は、指1本で、ページのはしを左へなぞります。本物の絵本や、手作りの厚紙の冊子で先にめくってから使うと、わかりやすくなります。</li>
       <li>設定は、右上の点を1秒ほど長押しすると開きます。カメラもマイクも使いません。名前や記録も保存しません。</li>
@@ -106,11 +136,11 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
 <div id="panel" role="dialog" aria-modal="true" aria-labelledby="ptitle">
   <div class="sheet">
     <h1 id="ptitle">支援者メニュー</h1>
-    <p class="note">下の2つの絵は、左から「とめる／再開」「おしまい」です。カメラもマイクも使いません。名前や記録は保存しません。</p>
+    <p class="note">押すとすぐに変わります。カメラもマイクも使いません。名前や記録は保存しません。</p>
 
     <div class="row">
       <h2>場面</h2>
-      <div class="opts">
+      <div class="opts five">
         <button class="opt" data-set="scene" data-v="ireru">いれる</button>
         <button class="opt" data-set="scene" data-v="hipparu">ひっぱる</button>
         <button class="opt" data-set="scene" data-v="chigiru">ちぎる</button>
@@ -119,126 +149,146 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
       </div>
     </div>
 
-    <div class="row">
-      <h2>いれる：入れる物</h2>
-      <div class="opts">
-        <button class="opt" data-set="obj" data-v="block">積木（大）</button>
-        <button class="opt" data-set="obj" data-v="ohajiki">おはじき（中）</button>
-        <button class="opt" data-set="obj" data-v="bead">ビーズ（小）</button>
+    <section class="group" aria-labelledby="gScene">
+      <h2 id="gScene">この場面</h2>
+      <div class="row" data-only="ireru">
+        <h3>物</h3>
+        <div class="opts">
+          <button class="opt" data-set="obj" data-v="block">積木</button>
+          <button class="opt" data-set="obj" data-v="ohajiki">おはじき</button>
+          <button class="opt" data-set="obj" data-v="bead">ビーズ</button>
+        </div>
+        <h3>入れ口</h3>
+        <div class="opts">
+          <button class="opt" data-set="mouth" data-v="wide">広い</button>
+          <button class="opt" data-set="mouth" data-v="mid">ふつう</button>
+          <button class="opt" data-set="mouth" data-v="narrow">せまい</button>
+        </div>
+        <h3>数</h3>
+        <div class="opts">
+          <button class="opt" data-set="count" data-v="3">3こ</button>
+          <button class="opt" data-set="count" data-v="5">5こ</button>
+          <button class="opt" data-set="count" data-v="8">8こ</button>
+        </div>
       </div>
-      <h2>いれる：入れ口</h2>
-      <div class="opts">
-        <button class="opt" data-set="mouth" data-v="wide">広い</button>
-        <button class="opt" data-set="mouth" data-v="mid">ふつう</button>
-        <button class="opt" data-set="mouth" data-v="narrow">せまい</button>
+      <div class="row" data-only="hipparu">
+        <h3>物</h3>
+        <div class="opts">
+          <button class="opt" data-set="pull" data-v="tissue">ティッシュ</button>
+          <button class="opt" data-set="pull" data-v="himo">明かりのひも</button>
+        </div>
       </div>
-      <h2>いれる：数</h2>
-      <div class="opts">
-        <button class="opt" data-set="count" data-v="3">3こ</button>
-        <button class="opt" data-set="count" data-v="5">5こ</button>
-        <button class="opt" data-set="count" data-v="8">8こ</button>
+      <div class="row" data-only="chigiru">
+        <h3>指</h3>
+        <div class="opts">
+          <button class="opt" data-set="fingers" data-v="two">2本</button>
+          <button class="opt" data-set="fingers" data-v="one">1本</button>
+        </div>
       </div>
-      <p class="note">ぜんぶ入ると、少しして容器から出てきます。入れる物と入れ口は、大きい方から少しずつ小さくしていきます。</p>
+      <div class="row" data-only="mekuru">
+        <h3>ページ</h3>
+        <div class="opts">
+          <button class="opt" data-set="pages" data-v="3">3ページ</button>
+          <button class="opt" data-set="pages" data-v="5">5ページ</button>
+        </div>
+      </div>
+      <div class="row" data-only="toosu">
+        <h3>道</h3>
+        <div class="opts">
+          <button class="opt" data-set="route" data-v="easy">ゆるい</button>
+          <button class="opt" data-set="route" data-v="mid">なみ</button>
+          <button class="opt" data-set="route" data-v="loop">ぐるぐる</button>
+        </div>
+        <h3>ビーズ</h3>
+        <div class="opts">
+          <button class="opt" data-set="bsize" data-v="l">大</button>
+          <button class="opt" data-set="bsize" data-v="m">中</button>
+          <button class="opt" data-set="bsize" data-v="s">小</button>
+        </div>
+        <h3>数</h3>
+        <div class="opts">
+          <button class="opt" data-set="beads" data-v="1">1こ</button>
+          <button class="opt" data-set="beads" data-v="3">3こ</button>
+          <button class="opt" data-set="beads" data-v="5">5こ</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="group" aria-labelledby="gAll">
+      <h2 id="gAll">みんな共通</h2>
+      <div class="row">
+        <h3>手助け</h3>
+        <div class="opts">
+          <button class="opt" data-set="assist" data-v="big">大きい</button>
+          <button class="opt" data-set="assist" data-v="mid">ふつう</button>
+          <button class="opt" data-set="assist" data-v="small">小さい</button>
+        </div>
+      </div>
+    </section>
+
+    <button id="moreBtn" class="more" type="button" aria-expanded="false" aria-controls="more">
+      <span class="caret" aria-hidden="true">▸</span>
+      <span><b>くわしく</b><small id="moreSum">触れ方・見た目・音</small><small id="moreMark" class="mark"></small></span>
+    </button>
+    <div id="more">
+      <div class="row" data-only="ireru">
+        <p class="note">物と入れ口は、大きい方から少しずつ小さくします。ぜんぶ入ると、少しして容器から出てきます。手助け「大きい」は、容器の近くで離せば入ります。</p>
+      </div>
+      <div class="row" data-only="hipparu">
+        <p class="note">ティッシュは、引き抜くと次の1枚がのぞきます。ひもは、引くと明かりが点きます。</p>
+      </div>
+      <div class="row" data-only="chigiru">
+        <p class="note">2本：紙の上に置いた2本の指を引き離すと裂けます。1本：紙の上で指をすべらせると裂けます。</p>
+      </div>
+      <div class="row" data-only="mekuru">
+        <p class="note">ページのはしを左へなぞるとめくれ、右へなぞると1枚戻ります。手助け「大きい」は、タップでもめくれます。</p>
+      </div>
+      <div class="row" data-only="toosu">
+        <h3>つまみ方</h3>
+        <div class="opts">
+          <button class="opt" data-set="pinch" data-v="one">1本の指</button>
+          <button class="opt" data-set="pinch" data-v="two">2本の指</button>
+        </div>
+        <h3>はなすと</h3>
+        <div class="opts">
+          <button class="opt" data-set="slide" data-v="on">すべる</button>
+          <button class="opt" data-set="slide" data-v="off">とまる</button>
+        </div>
+        <p class="note">ビーズは線から外れず、ならぶとおし合います。「とまる」は、つかむのが難しい子に向いています。手助け「大きい」は、線から少しはなれてもついてきます。</p>
+      </div>
+      <div class="row">
+        <h3>触れ方</h3>
+        <div class="opts">
+          <button class="opt" data-set="touch" data-v="first">最初の指だけ</button>
+          <button class="opt" data-set="touch" data-v="all">どの指でも</button>
+        </div>
+        <p class="note">手のひらや、ほかの指が触れてしまう子は「最初の指だけ」にします。</p>
+      </div>
+      <div class="row">
+        <h3>見た目</h3>
+        <div class="opts">
+          <button class="opt" data-set="look" data-v="soft">やさしい</button>
+          <button class="opt" data-set="look" data-v="mid">ふつう</button>
+          <button class="opt" data-set="look" data-v="strong">はっきり</button>
+        </div>
+        <p class="note">点滅はしません。ふちの線の濃さや、星の数が変わります。</p>
+      </div>
+      <div class="row">
+        <h3>音</h3>
+        <div class="opts four">
+          <button class="opt" data-set="vol" data-v="0">なし</button>
+          <button class="opt" data-set="vol" data-v="15">小</button>
+          <button class="opt" data-set="vol" data-v="30">中</button>
+          <button class="opt" data-set="vol" data-v="45">大</button>
+        </div>
+      </div>
+      <button id="introAgainBtn" class="opt wide">説明をもう一度見る</button>
     </div>
 
-    <div class="row">
-      <h2>ひっぱる</h2>
-      <div class="opts">
-        <button class="opt" data-set="pull" data-v="tissue">ティッシュ</button>
-        <button class="opt" data-set="pull" data-v="himo">明かりのひも</button>
-      </div>
+    <div class="foot">
+      <button id="undoBtn" class="undo" type="button" disabled>もとにもどす</button>
+      <button id="closeBtn" class="close" type="button">とじる</button>
     </div>
-
-    <div class="row">
-      <h2>ちぎる</h2>
-      <div class="opts">
-        <button class="opt" data-set="fingers" data-v="two">2本の指で</button>
-        <button class="opt" data-set="fingers" data-v="one">1本の指で</button>
-      </div>
-      <p class="note">2本の指：紙の上に2本の指を置き、左右（または上下）に引き離すと裂けます。1本の指：紙の上で指をすべらせると裂けます。</p>
-    </div>
-
-    <div class="row">
-      <h2>とおす：道</h2>
-      <div class="opts">
-        <button class="opt" data-set="route" data-v="easy">ゆるいカーブ</button>
-        <button class="opt" data-set="route" data-v="mid">なみ</button>
-        <button class="opt" data-set="route" data-v="loop">ぐるぐる</button>
-      </div>
-      <h2>とおす：ビーズの大きさ</h2>
-      <div class="opts">
-        <button class="opt" data-set="bsize" data-v="l">大</button>
-        <button class="opt" data-set="bsize" data-v="m">中</button>
-        <button class="opt" data-set="bsize" data-v="s">小</button>
-      </div>
-      <h2>とおす：ビーズの数</h2>
-      <div class="opts">
-        <button class="opt" data-set="beads" data-v="1">1こ</button>
-        <button class="opt" data-set="beads" data-v="3">3こ</button>
-        <button class="opt" data-set="beads" data-v="5">5こ</button>
-      </div>
-      <h2>とおす：つまみ方</h2>
-      <div class="opts">
-        <button class="opt" data-set="pinch" data-v="one">1本の指で</button>
-        <button class="opt" data-set="pinch" data-v="two">2本の指で</button>
-      </div>
-      <h2>とおす：手をはなしたとき</h2>
-      <div class="opts">
-        <button class="opt" data-set="slide" data-v="on">すべる</button>
-        <button class="opt" data-set="slide" data-v="off">その場でとまる</button>
-      </div>
-      <p class="note">ビーズは、線から外れません。ならんだビーズは、おし合います。ぜんぶ向こうの端にあつまると、星が出て、少しして元に戻ります。2本の指：ビーズの上に2本の指を置いて、つまむようにして動かします。すべる：手をはなしたビーズが、坂の下へ、ゆっくり滑ります（ゆるい坂では止まります）。つかむのが難しい子は「その場でとまる」を選んでください。</p>
-    </div>
-
-    <div class="row">
-      <h2>めくる：ページ数</h2>
-      <div class="opts">
-        <button class="opt" data-set="pages" data-v="3">3ページ</button>
-        <button class="opt" data-set="pages" data-v="5">5ページ</button>
-      </div>
-      <p class="note">指1本で、ページのはしを左へなぞるとめくれます。右へなぞると、1枚戻れます。最後のページをめくると星が出て、少しして最初に戻ります。</p>
-    </div>
-
-    <div class="row">
-      <h2>手助け（当たりの甘さ）</h2>
-      <div class="opts">
-        <button class="opt" data-set="assist" data-v="big">大きい</button>
-        <button class="opt" data-set="assist" data-v="mid">ふつう</button>
-        <button class="opt" data-set="assist" data-v="small">小さい</button>
-      </div>
-      <p class="note">大きい：物をつかめる範囲が広く、容器の近くで離せば入ります。小さい：入れ口の真上で離さないと入りません。<br>めくる：大きい＝どこをさわっても、少しなぞれば（タップでも）めくれます。ふつう＝ページの右半分から、半分くらいなぞります。小さい＝ページの角から、大きくなぞります。<br>とおす：大きい＝線から少しはなれても、ビーズがついてきます。小さい＝線の近くをなぞらないと、ついてきません。</p>
-    </div>
-
-    <div class="row">
-      <h2>触れ方</h2>
-      <div class="opts">
-        <button class="opt" data-set="touch" data-v="first">最初に触れた指だけ</button>
-        <button class="opt" data-set="touch" data-v="all">どの指でも</button>
-      </div>
-      <p class="note">手のひらや、ほかの指が画面に触れてしまう子は「最初に触れた指だけ」にしてください。</p>
-    </div>
-
-    <div class="row">
-      <h2>見た目の強さ（すべての場面）</h2>
-      <div class="opts">
-        <button class="opt" data-set="look" data-v="soft">やさしい</button>
-        <button class="opt" data-set="look" data-v="mid">ふつう</button>
-        <button class="opt" data-set="look" data-v="strong">はっきり</button>
-      </div>
-      <p class="note">点滅はしません。ふちの線の濃さ、星や紙くずの数、明かりの強さが変わります。</p>
-    </div>
-
-    <div class="row">
-      <h2>音</h2>
-      <div class="vol"><input id="vol" type="range" min="5" max="60" step="5" value="30" aria-label="音量"><b id="volOut">30%</b></div>
-      <div class="opts">
-        <button class="opt" data-set="sound" data-v="on">音：オン</button>
-        <button class="opt" data-set="sound" data-v="off">音：オフ</button>
-      </div>
-    </div>
-
-    <button id="introAgainBtn" class="opt wide">説明をもう一度見る</button>
-    <button id="closeBtn" class="close">閉じる</button>
   </div>
 </div>
 
@@ -1596,7 +1646,7 @@ $('introBtn').addEventListener('click', () => { ensureAC(); intro.classList.add(
 // ---- 支援者メニュー（右上の点を1.2秒長押し）----
 const gear = $('gear');
 let holdTimer = null;
-function openPanel(){ cancelAll(); markOpts(); $('panel').classList.add('open'); $('closeBtn').focus(); }
+function openPanel(){ cancelAll(); undoStack.length = 0; setMore(false); markOpts(); $('panel').classList.add('open'); $('closeBtn').focus({ preventScroll: true }); $('panel').querySelector('.sheet').scrollTop = 0; }
 function closePanel(){ $('panel').classList.remove('open'); gear.focus(); }
 gear.addEventListener('pointerdown', e => {
   e.preventDefault(); gear.classList.add('hold');
@@ -1605,35 +1655,59 @@ gear.addEventListener('pointerdown', e => {
 ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => gear.addEventListener(ev, () => { clearTimeout(holdTimer); gear.classList.remove('hold'); }));
 gear.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openPanel(); } });
 
-function markOpts(){
-  const cur = { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pages: String(S.pages), route: S.route, bsize: S.bsize, beads: String(S.beads), pinch: S.pinch, slide: S.slide, pull: S.pull, fingers: S.fingers, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, sound: S.sound ? 'on' : 'off' };
-  document.querySelectorAll('#panel [data-set]').forEach(b => b.setAttribute('aria-pressed', String(cur[b.dataset.set] === b.dataset.v)));
+// 今の値（ボタンの data-v とそろえる）
+function curOpts(){
+  return { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pages: String(S.pages), route: S.route, bsize: S.bsize, beads: String(S.beads), pinch: S.pinch, slide: S.slide, pull: S.pull, fingers: S.fingers, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, vol: S.sound ? String(S.vol) : '0' };
 }
-const volEl = $('vol');
-volEl.addEventListener('input', () => { S.vol = Number(volEl.value); $('volOut').textContent = S.vol + '%'; applyVol(); });
+// 「くわしく」の中で、はじめの値から変えているもの
+const MORE_DEF = { touch: 'first', look: 'mid', vol: '30', pinch: 'one', slide: 'on' };
+const MORE_LBL = { touch: { all: '触れ方：どの指でも' }, look: { soft: '見た目：やさしい', strong: '見た目：はっきり' },
+  vol: { '0': '音：なし', '15': '音：小', '45': '音：大' }, pinch: { two: 'つまみ方：2本の指' }, slide: { off: 'はなすと：とまる' } };
+function markOpts(){
+  const cur = curOpts();
+  document.querySelectorAll('#panel [data-set]').forEach(b => b.setAttribute('aria-pressed', String(cur[b.dataset.set] === b.dataset.v)));
+  document.querySelectorAll('#panel [data-only]').forEach(el => el.classList.toggle('on', el.dataset.only === S.scene));
+  $('moreSum').textContent = (S.scene === 'toosu' ? 'つまみ方・はなすと・' : '') + '触れ方・見た目・音';
+  const ch = Object.keys(MORE_DEF).filter(k => (k !== 'pinch' && k !== 'slide') || S.scene === 'toosu')
+    .filter(k => cur[k] !== MORE_DEF[k]).map(k => (MORE_LBL[k] && MORE_LBL[k][cur[k]]) || '');
+  $('moreMark').textContent = ch.filter(Boolean).length ? '変えている：' + ch.filter(Boolean).join('・') : '';
+  $('undoBtn').disabled = !undoStack.length;
+}
+function applySet(k, v){
+  if (k === 'scene') setScene(v);
+  if (k === 'obj'){ S.obj = v; resetIreru(); }
+  if (k === 'mouth'){ S.mouth = v; resetIreru(); }
+  if (k === 'count'){ S.count = Number(v); resetIreru(); }
+  if (k === 'pages'){ S.pages = Number(v); resetMk(); }
+  if (k === 'route'){ S.route = v; resetTs(); }
+  if (k === 'bsize'){ S.bsize = v; resetTs(); }
+  if (k === 'beads'){ S.beads = Number(v); resetTs(); }
+  if (k === 'pinch'){ S.pinch = v; TS.grab = null; }
+  if (k === 'slide'){ S.slide = v; TS.beads.forEach(b => { b.v = 0; }); }
+  if (k === 'pull'){ S.pull = v; resetHip(); }
+  if (k === 'fingers'){ S.fingers = v; CG.tear = null; CG.pend = null; }
+  if (k === 'assist') S.assist = v;
+  if (k === 'touch') S.firstOnly = v === 'first';
+  if (k === 'look') S.look = v;
+  if (k === 'vol'){ const n = Number(v); if (n > 0){ S.vol = n; S.sound = true; } else S.sound = false; applyVol(); }
+}
+// もとにもどす：メニューを開いてから変えた分を、新しい方から1つずつ戻す
+const undoStack = [];
+function setMore(open){ $('more').classList.toggle('open', open); $('moreBtn').setAttribute('aria-expanded', String(open)); }
 $('panel').addEventListener('click', e => {
   if (e.target === $('panel')){ closePanel(); return; }
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.set){
-    const k = b.dataset.set, v = b.dataset.v;
-    if (k === 'scene') setScene(v);
-    if (k === 'obj'){ S.obj = v; resetIreru(); }
-    if (k === 'mouth'){ S.mouth = v; resetIreru(); }
-    if (k === 'count'){ S.count = Number(v); resetIreru(); }
-    if (k === 'pages'){ S.pages = Number(v); resetMk(); }
-    if (k === 'route'){ S.route = v; resetTs(); }
-    if (k === 'bsize'){ S.bsize = v; resetTs(); }
-    if (k === 'beads'){ S.beads = Number(v); resetTs(); }
-    if (k === 'pinch'){ S.pinch = v; TS.grab = null; }
-    if (k === 'slide'){ S.slide = v; TS.beads.forEach(b => { b.v = 0; }); }
-    if (k === 'pull'){ S.pull = v; resetHip(); }
-    if (k === 'fingers'){ S.fingers = v; CG.tear = null; CG.pend = null; }
-    if (k === 'assist') S.assist = v;
-    if (k === 'touch') S.firstOnly = v === 'first';
-    if (k === 'look') S.look = v;
-    if (k === 'sound'){ S.sound = v === 'on'; applyVol(); }
+    const k = b.dataset.set, v = b.dataset.v, prev = curOpts()[k];
+    if (prev === v) return;
+    undoStack.push({ k, v: prev }); if (undoStack.length > 30) undoStack.shift();
+    applySet(k, v);
     markOpts();
-  } else if (b.id === 'closeBtn') closePanel();
+  } else if (b.id === 'undoBtn'){
+    const u = undoStack.pop(); if (u) applySet(u.k, u.v);
+    markOpts();
+  } else if (b.id === 'moreBtn') setMore($('more').classList.contains('open') ? false : true);
+  else if (b.id === 'closeBtn') closePanel();
   else if (b.id === 'introAgainBtn'){ closePanel(); intro.classList.remove('hide'); }
 });
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && $('panel').classList.contains('open')) closePanel(); });
