@@ -67,11 +67,11 @@ th{font-weight:600;color:#5a5040;font-size:12px}
     <h2>センサーの数字（回転の速さ：度/秒）</h2>
     <table>
       <tr><th></th><th>いま</th><th>回った合計(度)</th></tr>
-      <tr id="rA" class="hl"><td>ア（画面に垂直な軸）</td><td id="vA">–</td><td id="sA">–</td></tr>
+      <tr id="rA"><td>ア（画面に垂直な軸）</td><td id="vA">–</td><td id="sA">–</td></tr>
       <tr id="rB"><td>イ（左右の軸）</td><td id="vB">–</td><td id="sB">–</td></tr>
       <tr id="rG"><td>ウ（上下の軸）</td><td id="vG">–</td><td id="sG">–</td></tr>
     </table>
-    <p class="note" style="margin-top:8px">端末を机に置いて、その場で回すと、「ア」が動きます。持ち上げて、ほかの向きに回したときは、「イ」「ウ」が動きます。</p>
+    <p class="note" style="margin-top:8px">ふたは、いちばん大きく回った軸で動きます。机に置いて回したときは、「ウ」が大きく動くことがあります（iPhoneで確認された動き）。持ち上げて向きを変えたときは、ほかの軸が動きます。</p>
     <p id="rate" class="note" style="margin-top:6px"></p>
     <p id="tilt" class="note" style="margin-top:6px"></p>
   </div>
@@ -144,18 +144,27 @@ function onMotion(e){
   if (g && g.z != null) st.grav = [g.x, g.y, g.z];
 }
 
+// ふたを回す軸：いちばん大きく回った軸を使う（切りかえは10度以上の差があるときだけ）
+function dialAxis(){
+  const cur = st.ax || 0;
+  let best = cur;
+  for (let i = 0; i < 3; i++) if (Math.abs(st.sum[i]) > Math.abs(st.sum[best]) + 10) best = i;
+  st.ax = best; return best;
+}
 // 画面の更新（センサーの頻度と別にする）
 const f1 = x => (x >= 0 ? '+' : '') + x.toFixed(1);
 function paint(){
   if (st.ok){
     ['A', 'B', 'G'].forEach((k, i) => { $('v' + k).textContent = f1(st.v[i]); $('s' + k).textContent = f1(st.sum[i]); });
-    $('lid').setAttribute('transform', 'rotate(' + (-st.sum[0] * st.flip).toFixed(2) + ')');
-    const t = st.sum[0] / 360;
-    $('turns').textContent = 'ア：' + (Math.abs(t) < 0.005 ? '0' : f1(t)) + ' 回転（' + (st.sum[0] > 0 ? '反時計まわり' : st.sum[0] < 0 ? '時計まわり' : '') + '）';
+    const ax = dialAxis();
+    $('lid').setAttribute('transform', 'rotate(' + (-st.sum[ax] * st.flip).toFixed(2) + ')');
+    ['rA', 'rB', 'rG'].forEach((id, i) => $(id).classList.toggle('hl', i === ax));
+    const t = st.sum[ax] / 360, nm = ['ア', 'イ', 'ウ'][ax];
+    $('turns').textContent = 'ふたは「' + nm + '」で動いています：' + (Math.abs(t) < 0.005 ? '0' : f1(t)) + ' 回転（' + (st.sum[ax] > 0 ? '反時計まわり' : st.sum[ax] < 0 ? '時計まわり' : '') + '）';
     $('rate').textContent = '届く回数：' + st.rate.toFixed(0) + ' 回/秒　受け取った合計：' + st.ev;
     if (st.grav){
       const gz = st.grav[2], flat = Math.abs(gz) > 8.3;
-      $('tilt').textContent = '向き：' + (flat ? '机に平らに置いている（画面に垂直な軸＝ア を使えます）' : '傾いている／立てている（アは、机で回す動きになりません）');
+      $('tilt').textContent = '向き：' + (flat ? '机に平らに置いている' : '傾いている／立てている');
     }
     setStatus('センサーは動いています。<b>' + (st.biasOn ? 'ずれを引いて計算中' : 'ずれは引いていません') + '</b>');
   }
@@ -163,7 +172,7 @@ function paint(){
 }
 requestAnimationFrame(paint);
 
-$('resetBtn').addEventListener('click', () => { st.sum = [0, 0, 0]; log('0にもどしました'); });
+$('resetBtn').addEventListener('click', () => { st.sum = [0, 0, 0]; st.ax = 0; log('0にもどしました'); });
 $('flipBtn').addEventListener('click', () => { st.flip = -st.flip; log('ふたの見える向きを入れかえました'); });
 $('dead').addEventListener('change', e => { st.dead = e.target.checked; log('小さなゆれを数えない：' + (st.dead ? 'する' : 'しない')); });
 $('useBias').addEventListener('change', e => { st.biasOn = e.target.checked; log('ずれを引く：' + (st.biasOn ? 'する' : 'しない')); });
