@@ -93,7 +93,7 @@ th{font-weight:600;color:#5a5040;font-size:12px}
 
 <script>
 const $ = id => document.getElementById(id);
-const st = { on: false, ev: 0, ok: 0, dead: true, lastT: 0, rate: 0, rateCount: 0, rateT: 0, v: [0, 0, 0], sum: [0, 0, 0], bias: [0, 0, 0], biasOn: false, flip: 1, measuring: null, grav: null };
+const st = { on: false, ev: 0, ok: 0, dead: true, lastT: 0, rate: 0, rateCount: 0, rateT: 0, v: [0, 0, 0], sum: [0, 0, 0], bias: [0, 0, 0], biasOn: false, flip: -1, measuring: null, grav: null };
 const logEl = $('log');
 function log(m){ const t = new Date().toLocaleTimeString('ja-JP', { hour12: false }); logEl.textContent = (t + ' ' + m + '\n' + logEl.textContent).slice(0, 1500); }
 
@@ -160,7 +160,7 @@ function paint(){
     $('lid').setAttribute('transform', 'rotate(' + (-st.sum[ax] * st.flip).toFixed(2) + ')');
     ['rA', 'rB', 'rG'].forEach((id, i) => $(id).classList.toggle('hl', i === ax));
     const t = st.sum[ax] / 360, nm = ['ア', 'イ', 'ウ'][ax];
-    $('turns').textContent = 'ふたは「' + nm + '」で動いています：' + (Math.abs(t) < 0.005 ? '0' : f1(t)) + ' 回転（' + (st.sum[ax] > 0 ? '反時計まわり' : st.sum[ax] < 0 ? '時計まわり' : '') + '）';
+    $('turns').textContent = 'ふたは「' + nm + '」で動いています：' + (Math.abs(t) < 0.005 ? '0' : f1(t)) + ' 回転（' + (st.sum[ax] > 0 ? '時計まわり' : st.sum[ax] < 0 ? '反時計まわり' : '') + '）';
     $('rate').textContent = '届く回数：' + st.rate.toFixed(0) + ' 回/秒　受け取った合計：' + st.ev;
     if (st.grav){
       const gz = st.grav[2], flat = Math.abs(gz) > 8.3;
