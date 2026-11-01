@@ -58,8 +58,9 @@ input[type=range]{width:100%;accent-color:#4a6442}
 .meter i{position:absolute;inset:0 auto 0 0;width:0;background:linear-gradient(90deg,#9fcbb2,#6fa6c8 60%,#4a6442)}
 .meter span{position:absolute;inset:0;display:flex;align-items:center;padding:0 10px;font-size:14px;font-weight:600}
 button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offset:2px}
-.opts.five{grid-template-columns:repeat(5,1fr);gap:6px}
+.opts.five{grid-template-columns:repeat(3,1fr);gap:6px}
 .opts.five .opt{font-size:15px;padding:6px 2px}
+.sensor{display:flex;flex-direction:column;gap:8px}
 .opts.four{grid-template-columns:repeat(4,1fr)}
 .group{display:flex;flex-direction:column;gap:12px;padding:14px 14px 16px;border-radius:16px;background:#f4ecda}
 .group > h2{font-size:13px;margin:0;color:#7a6e55;font-weight:700;letter-spacing:.06em}
@@ -97,7 +98,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
 <div id="intro" role="dialog" aria-labelledby="introTitle">
   <div class="card">
     <h1 id="introTitle">て あそび（支援者用の説明）</h1>
-    <p>指を使った操作（入れる、ひっぱる、ちぎる、めくる、とおす）を、画面の上でくり返し楽しむための遊びです。場面は支援者メニューで選びます。本物のコルク積木や容器、ティッシュ、色紙で遊ぶことを先にして、この画面は、くり返しや段階を上げるときの補助として使ってください。</p>
+    <p>指を使った操作（入れる、ひっぱる、ちぎる、めくる、とおす、まわす）を、画面の上でくり返し楽しむための遊びです。場面は支援者メニューで選びます。本物のコルク積木や容器、ティッシュ、色紙で遊ぶことを先にして、この画面は、くり返しや段階を上げるときの補助として使ってください。</p>
     <h2>すすめ方</h2>
     <ol>
       <li>「はじめる」を押す。</li>
@@ -111,6 +112,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
       <li>手のひら全体で画面に触れてしまう子は、設定の「くわしく」で、触れ方を「最初の指だけ」にしてください。</li>
       <li>2本の指で紙をちぎるのが難しい子は、「ちぎる」の指を「1本」にしてください。</li>
       <li>「とおす」は、ビーズを指でつまんで、ワイヤーに沿って動かします。2本の指でつまむ設定もあります。本物のビーズコースター（ワイヤーとビーズの玩具）と組み合わせると、わかりやすくなります。</li>
+      <li>「まわす」は、端末を机の上に置いて、その場でゆっくり回します（ふたが回ります）。持ち上げて回さないでください。机の上で滑るときは、すべり止めのシートを敷いてください。本物のふたやねじぶたで先に回してから使うと、わかりやすくなります。</li>
       <li>「めくる」は、指1本で、ページのはしを左へなぞります。本物の絵本や、手作りの厚紙の冊子で先にめくってから使うと、わかりやすくなります。</li>
       <li>設定は、右上の点を1秒ほど長押しすると開きます。カメラもマイクも使いません。名前や記録も保存しません。</li>
     </ul>
@@ -146,6 +148,7 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
         <button class="opt" data-set="scene" data-v="chigiru">ちぎる</button>
         <button class="opt" data-set="scene" data-v="mekuru">めくる</button>
         <button class="opt" data-set="scene" data-v="toosu">とおす</button>
+        <button class="opt" data-set="scene" data-v="mawasu">まわす</button>
       </div>
     </div>
 
@@ -212,6 +215,14 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
           <button class="opt" data-set="beads" data-v="5">5こ</button>
         </div>
       </div>
+      <div class="row" data-only="mawasu">
+        <h3>向き</h3>
+        <div class="opts">
+          <button class="opt" data-set="turnDir" data-v="alt">こうごに</button>
+          <button class="opt" data-set="turnDir" data-v="open">ひらく</button>
+          <button class="opt" data-set="turnDir" data-v="close">しめる</button>
+        </div>
+      </div>
     </section>
 
     <section class="group" aria-labelledby="gAll">
@@ -255,6 +266,24 @@ button:focus-visible,input:focus-visible{outline:3px solid #e0b24a;outline-offse
           <button class="opt" data-set="slide" data-v="off">とまる</button>
         </div>
         <p class="note">ビーズは線から外れず、ならぶとおし合います。「とまる」は、つかむのが難しい子に向いています。手助け「大きい」は、線から少しはなれてもついてきます。</p>
+      </div>
+      <div class="row" data-only="mawasu">
+        <p class="note">回す量は、手助けで決まります（大きい＝1回転、ふつう＝2回転、小さい＝3回転）。「ひらく」は左まわし、「しめる」は右まわしです。「こうごに」は、ひらく → ふたが自動で戻る → しめる → … をくり返します。手助け「大きい」は、戻した分を引きません。「ふつう」「小さい」は、戻した分を引きます。</p>
+        <h3>回し方</h3>
+        <div class="opts">
+          <button class="opt" data-set="turnMode" data-v="device">端末を回す</button>
+          <button class="opt" data-set="turnMode" data-v="finger">画面をなぞる</button>
+        </div>
+        <h3>見える向き</h3>
+        <div class="opts">
+          <button class="opt" data-set="turnFlip" data-v="norm">そのまま</button>
+          <button class="opt" data-set="turnFlip" data-v="rev">反対</button>
+        </div>
+        <div class="sensor">
+          <button id="sensorBtn" class="opt" type="button">センサーを許可する</button>
+          <p id="sensorSt" class="note"></p>
+        </div>
+        <p class="note">端末を机の上に置いて、その場でゆっくり回します。持ち上げて回さないでください。端末を回した向きと、ふたの回る向きが逆のときは、「見える向き」を「反対」にしてください。</p>
       </div>
       <div class="row">
         <h3>触れ方</h3>
@@ -335,7 +364,7 @@ window.addEventListener('resize', resize);
 resize();
 
 // ---- 設定（保存しない）----
-const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pages: 5, route: 'easy', bsize: 'l', beads: 3, pinch: 'one', slide: 'on', pull: 'tissue', fingers: 'two', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
+const S = { scene: 'ireru', obj: 'block', mouth: 'wide', count: 5, pages: 5, route: 'easy', bsize: 'l', beads: 3, pinch: 'one', slide: 'on', pull: 'tissue', fingers: 'two', turnDir: 'alt', turnMode: 'device', turnFlip: 'norm', assist: 'mid', firstOnly: true, look: 'mid', vol: 30, sound: true };
 // 見た目の強さ：edge＝ふちの線、glow＝入れ口の光、stars＝星、bits＝紙くず、light＝明かり
 const LOOK = {
   soft:   { edge: 0.14, lw: 1,   glow: 0.18, stars: 2, bits: 4,  light: 0.45 },
@@ -1520,12 +1549,172 @@ function drawToosu(){
   if (TS.grab){ const b = TS.beads[TS.grab.k], q = posAt(G, b.a); drawBead(q.x, q.y, G.r, b.ci, 1); }
 }
 
+
+// =====================================================================
+// ---- まわす（端末を回す／画面をなぞる）----
+const MW_N = { big: 1, mid: 2, small: 3 };      // 手助けごとの回転数
+const MW_LOOSE = 0.55;                          // ゆるんだふたの高さ
+const MW = { phase: 'open', prog: 0, st: 'turn', t: 0, give: 0, riseV: 0, angV: 0, b1: 0, b2: 0, tickAcc: 0, tickT: 0, drag: null };
+function mwGeom(){ return { cx: W / 2, cy: H * 0.46, R: U * 0.3 }; }
+function resetMw(){
+  MW.phase = S.turnDir === 'close' ? 'close' : 'open';
+  MW.prog = 0; MW.st = 'turn'; MW.t = 0; MW.give = 0; MW.b1 = MW.b2 = 0; MW.tickAcc = 0; MW.drag = null;
+  MW.riseV = MW.phase === 'close' ? MW_LOOSE : 0; MW.angV = 0;
+}
+const mwReq = () => MW.phase === 'open' ? -1 : 1;     // 画面で時計まわりを＋としたとき、ひらくのは左（−）、しめるのは右（＋）
+function mwNextPhase(){ return S.turnDir === 'alt' ? (MW.phase === 'open' ? 'close' : 'open') : (S.turnDir === 'close' ? 'close' : 'open'); }
+// d：画面で時計まわりを＋とした、回した角度（度）
+function mwFeed(d){
+  if (MW.st !== 'turn' || !d) return;
+  const fwd = d * mwReq();
+  if (fwd > 0) MW.prog += fwd / 360;
+  else if (S.assist !== 'big') MW.prog = Math.max(0, MW.prog + fwd / 360);
+  if (fwd < 0 && (MW.prog <= 0.001 || S.assist === 'big')) MW.give = clamp(MW.give + fwd * 0.35, -10, 0);
+  if (fwd > 0){
+    MW.tickAcc += fwd;
+    while (MW.tickAcc >= 30){
+      MW.tickAcc -= 30;
+      const now = performance.now();
+      if (now - MW.tickT > 70){ MW.tickT = now; ping(392 * RATIO[Math.floor(MW.prog * 12) % RATIO.length] * (MW.phase === 'open' ? 1 : 0.75), 0.016, 0.35, 2.4); }
+    }
+  }
+}
+function updMw(dt){
+  const N = MW_N[S.assist], L = LOOK[S.look], G = mwGeom();
+  MW.t += dt; MW.give *= Math.exp(-dt / 0.25);
+  let riseT, angT;
+  const q = clamp(MW.prog / N, 0, 1);
+  if (MW.st === 'turn'){
+    if (MW.prog >= N){
+      MW.st = 'done'; MW.t = 0; MW.b1 = MW.b2 = 0; bell(0.05); addStars(G.cx, G.cy, G.R * 1.1, L.stars * 2);
+    }
+    riseT = MW.phase === 'open' ? 0.7 * q : MW_LOOSE * (1 - q);
+    angT = mwReq() * (clamp(MW.prog, 0, N) * 360 + MW.give);
+  } else if (MW.st === 'done'){
+    if (MW.t > 0.18 && !MW.b1){ MW.b1 = 1; bell(0.04); }
+    if (MW.t > 0.36 && !MW.b2){ MW.b2 = 1; bell(0.035); }
+    riseT = MW.phase === 'open' ? 1 : 0;
+    angT = mwReq() * N * 360;
+    if (MW.t > 2.4){ MW.st = 'back'; MW.t = 0; MW.angV = ((MW.angV % 360) + 360) % 360; if (MW.angV > 180) MW.angV -= 360; }
+  } else {
+    riseT = mwNextPhase() === 'close' ? MW_LOOSE : 0;
+    angT = 0;
+    if (MW.t > 1.3){
+      MW.phase = mwNextPhase(); MW.prog = 0; MW.st = 'turn'; MW.t = 0; MW.give = 0; MW.tickAcc = 0;
+    }
+  }
+  const kA = MW.st === 'turn' ? 0.04 : 0.28;
+  MW.angV += (angT - MW.angV) * (1 - Math.exp(-dt / kA));
+  MW.riseV += (riseT - MW.riseV) * (1 - Math.exp(-dt / (MW.st === 'turn' ? 0.09 : 0.22)));
+}
+function mwDown(id, p){
+  if (S.turnMode !== 'finger') return;
+  const G = mwGeom(); if (Math.hypot(p.x - G.cx, p.y - G.cy) > G.R * 1.9) return;
+  MW.drag = { id, a: Math.atan2(p.y - G.cy, p.x - G.cx) };
+}
+function mwMove(id, p){
+  const d = MW.drag; if (!d || d.id !== id) return;
+  const G = mwGeom(); if (Math.hypot(p.x - G.cx, p.y - G.cy) < G.R * 0.25) return;
+  const a = Math.atan2(p.y - G.cy, p.x - G.cx);
+  let da = a - d.a; da = ((da + Math.PI * 3) % (Math.PI * 2)) - Math.PI; d.a = a;
+  mwFeed(clamp(da * 180 / Math.PI, -40, 40));
+}
+function mwUp(id){ if (MW.drag && MW.drag.id === id) MW.drag = null; }
+
+// 端末の回転（ジャイロ）。いちばん大きく動いている軸を使う
+const SN = { state: '', on: false, last: 0, ok: 0, f: [0, 0, 0], ax: 0 };
+function onMotion(e){
+  const rr = e.rotationRate; if (!rr || rr.alpha == null) return;
+  const now = performance.now(); let dt = SN.last ? (now - SN.last) / 1000 : 0; SN.last = now;
+  if (dt <= 0) return; dt = Math.min(dt, 0.1); SN.ok++;
+  const raw = [rr.alpha || 0, rr.beta || 0, rr.gamma || 0];
+  for (let i = 0; i < 3; i++) SN.f[i] += (Math.abs(raw[i]) - SN.f[i]) * Math.min(1, dt / 0.25);
+  let best = SN.ax; for (let i = 0; i < 3; i++) if (SN.f[i] > SN.f[best] * 1.5 + 3) best = i;
+  SN.ax = best;
+  if (S.scene !== 'mawasu' || S.turnMode !== 'device' || frozen) return;
+  if ($('panel').classList.contains('open') || !$('intro').classList.contains('hide')) return;
+  let w = raw[best]; if (Math.abs(w) < 2.5) w = 0;      // 小さなゆれは数えない
+  w = clamp(w, -300, 300);                              // 速く回しても、ふたは速くなりすぎない
+  mwFeed(w * dt * (S.turnFlip === 'rev' ? -1 : 1));
+}
+async function askMotion(){
+  const C = window.DeviceMotionEvent;
+  if (!C){ SN.state = 'none'; updSensorSt(); return; }
+  if (typeof C.requestPermission === 'function'){
+    try { SN.state = await C.requestPermission(); } catch (_){ SN.state = 'error'; }
+  } else SN.state = 'granted';
+  updSensorSt();
+}
+window.addEventListener('devicemotion', onMotion);      // 許可がないあいだは、何も届かない（受けるだけで、場面が「まわす」のときしか使わない）
+function updSensorSt(){
+  const el = $('sensorSt'); if (!el) return;
+  const flowing = performance.now() - SN.last < 1500;
+  const need = window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function' && SN.state !== 'granted';
+  let t;
+  if (!window.DeviceMotionEvent) t = 'この端末（ブラウザ）では、センサーが使えません。「画面をなぞる」を選んでください。';
+  else if (SN.state === 'denied') t = '許可されていません。ブラウザの設定を確認して、ページを開き直してください。';
+  else if (flowing) t = 'センサーは動いています（動いている軸：' + ['ア', 'イ', 'ウ'][SN.ax] + '）。';
+  else if (need) t = '許可が必要です。上のボタンを押してください。';
+  else if (!flowing) t = '数字が届いていません。端末を少し動かしてみてください。パソコンでは動きません。';
+  el.textContent = 'センサー：' + t;
+}
+if (!(window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function')) askMotion();
+
+function drawMawasu(){
+  const L = LOOK[S.look], G = mwGeom(), cx = G.cx, cy = G.cy, R = G.R, rise = MW.riseV, ang = MW.angV * Math.PI / 180;
+  const N = MW_N[S.assist], lr = R * (1 + 0.2 * rise);
+  // 瓶のくち（上から見たところ）
+  ctx.beginPath(); ctx.arc(cx + U * 0.005, cy + U * 0.012, R * 1.2, 0, Math.PI * 2); ctx.fillStyle = 'rgba(90,64,40,.1)'; ctx.fill();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 1.16, 0, Math.PI * 2); ctx.fillStyle = 'rgba(176,212,236,.6)'; ctx.fill();
+  ctx.strokeStyle = edgeCol(); ctx.lineWidth = edgeW(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(cx, cy, R * 1.04, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(255,255,255,.55)'; ctx.lineWidth = U * 0.006; ctx.stroke();
+  // 向きのやじるし（ふたが回っている間だけ、うすく）
+  if (MW.st === 'turn'){
+    const cw = mwReq() > 0, ra = R * 1.36;
+    ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    ctx.strokeStyle = 'rgba(90,64,40,' + (0.2 + 0.2 * L.edge).toFixed(2) + ')'; ctx.lineWidth = U * 0.012;
+    [-90, 90].forEach(c => {
+      const a0 = (c - 36) * Math.PI / 180, a1 = (c + 36) * Math.PI / 180;
+      ctx.beginPath(); ctx.arc(cx, cy, ra, a0, a1); ctx.stroke();
+      const th = cw ? a1 : a0, hx = cx + Math.cos(th) * ra, hy = cy + Math.sin(th) * ra;
+      const tx = cw ? -Math.sin(th) : Math.sin(th), ty = cw ? Math.cos(th) : -Math.cos(th), nx = Math.cos(th), ny = Math.sin(th), hl = U * 0.04;
+      ctx.beginPath(); ctx.moveTo(hx - tx * hl + nx * hl * 0.6, hy - ty * hl + ny * hl * 0.6); ctx.lineTo(hx, hy); ctx.lineTo(hx - tx * hl - nx * hl * 0.6, hy - ty * hl - ny * hl * 0.6); ctx.stroke();
+    });
+    ctx.restore();
+  }
+  // ふたの影（浮くほど、大きくうすく、ずれる）
+  ctx.beginPath(); ctx.arc(cx + U * 0.02 * rise, cy + U * 0.035 * rise + U * 0.006, lr, 0, Math.PI * 2);
+  ctx.fillStyle = 'rgba(90,64,40,' + (0.17 - 0.06 * rise).toFixed(3) + ')'; ctx.fill();
+  // ふた
+  ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang);
+  const pts = []; for (let i = 0; i < 36; i++){ const a = i / 36 * Math.PI * 2, r = lr * (1 + jit(i * 3 + 7) * 0.012); pts.push({ x: Math.cos(a) * r, y: Math.sin(a) * r }); }
+  smoothClosed(pts);
+  const g = ctx.createRadialGradient(-lr * 0.3, -lr * 0.35, lr * 0.05, 0, 0, lr);
+  g.addColorStop(0, '#f6dc96'); g.addColorStop(0.6, '#eccb73'); g.addColorStop(1, '#e2b95c');
+  ctx.fillStyle = g; ctx.fill(); ctx.strokeStyle = edgeCol(); ctx.lineWidth = edgeW() * 1.2; ctx.stroke();
+  ctx.lineCap = 'round'; ctx.strokeStyle = 'rgba(140,100,40,.42)'; ctx.lineWidth = U * 0.007;
+  for (let i = 0; i < 28; i++){ const a = i / 28 * Math.PI * 2; ctx.beginPath(); ctx.moveTo(Math.cos(a) * lr * 0.9, Math.sin(a) * lr * 0.9); ctx.lineTo(Math.cos(a) * lr * 0.97, Math.sin(a) * lr * 0.97); ctx.stroke(); }
+  ctx.beginPath(); ctx.arc(0, 0, lr * 0.62, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(140,100,40,.25)'; ctx.lineWidth = U * 0.006; ctx.stroke();
+  ctx.beginPath(); ctx.arc(0, 0, lr * 0.14, 0, Math.PI * 2); ctx.fillStyle = '#d6ae52'; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(0, -lr * 0.93); ctx.lineTo(-lr * 0.08, -lr * 0.7); ctx.lineTo(lr * 0.08, -lr * 0.7); ctx.closePath();
+  ctx.fillStyle = '#fffaf0'; ctx.fill(); ctx.strokeStyle = edgeCol(); ctx.lineWidth = edgeW(); ctx.stroke();
+  ctx.beginPath(); ctx.arc(-lr * 0.3, -lr * 0.3, lr * 0.36, Math.PI * 1.05, Math.PI * 1.55); ctx.strokeStyle = 'rgba(255,255,255,.4)'; ctx.lineWidth = U * 0.012; ctx.stroke();
+  ctx.restore();
+  // 回った回数（丸）
+  const dy = cy + R * 1.62, gap = U * 0.075, done = MW.st !== 'turn' ? N : Math.floor(MW.prog + 1e-6);
+  for (let i = 0; i < N; i++){
+    const x = cx + (i - (N - 1) / 2) * gap;
+    ctx.beginPath(); ctx.arc(x, dy, U * 0.02, 0, Math.PI * 2);
+    ctx.fillStyle = i < done ? '#e6b94c' : 'rgba(255,253,248,.7)'; ctx.fill(); ctx.strokeStyle = edgeCol(); ctx.lineWidth = edgeW(); ctx.stroke();
+  }
+}
+
 // =====================================================================
 // ---- 指の入力 ----
 const ptrs = new Map();
 function pos(e){ const r = cv.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; }
 function maxPtrs(){
-  if (S.scene === 'mekuru') return 1;
+  if (S.scene === 'mekuru' || S.scene === 'mawasu') return 1;
   if (S.scene === 'toosu') return S.pinch === 'two' ? 2 : 1;
   if (S.scene === 'chigiru') return S.fingers === 'two' ? 2 : 1;
   return S.firstOnly ? 1 : 5;
@@ -1539,6 +1728,7 @@ cv.addEventListener('pointerdown', e => {
   else if (S.scene === 'hipparu') hpDown(e.pointerId, p);
   else if (S.scene === 'mekuru') mkDown(e.pointerId, p);
   else if (S.scene === 'toosu') tsDown(e.pointerId, p);
+  else if (S.scene === 'mawasu') mwDown(e.pointerId, p);
   else cgDown(e.pointerId, p);
 });
 cv.addEventListener('pointermove', e => {
@@ -1548,6 +1738,7 @@ cv.addEventListener('pointermove', e => {
   else if (S.scene === 'hipparu') hpMove(e.pointerId, p);
   else if (S.scene === 'mekuru') mkMove(e.pointerId, p);
   else if (S.scene === 'toosu') tsMove(e.pointerId, p);
+  else if (S.scene === 'mawasu') mwMove(e.pointerId, p);
   else cgMove(e.pointerId, p);
 });
 function ptrUp(e){
@@ -1557,6 +1748,7 @@ function ptrUp(e){
   else if (S.scene === 'hipparu') hpUp(e.pointerId);
   else if (S.scene === 'mekuru') mkUp(e.pointerId);
   else if (S.scene === 'toosu') tsUp(e.pointerId);
+  else if (S.scene === 'mawasu') mwUp(e.pointerId);
   else cgUp(e.pointerId);
 }
 cv.addEventListener('pointerup', ptrUp);
@@ -1571,10 +1763,10 @@ function cancelAll(){
   if (CG.tear){ CG.relax = CG.tear; CG.tear = null; }
   CG.pend = null; CG.used.clear();
   if (MK.drag){ MK.target = MK.drag.p0; MK.drag = null; }
-  TS.grab = null;
+  TS.grab = null; MW.drag = null;
   setRustle(0);
 }
-function resetScenes(){ stars.length = 0; resetIreru(); resetHip(); newSheet(); CG.bits.length = 0; resetMk(); resetTs(); }
+function resetScenes(){ stars.length = 0; resetIreru(); resetHip(); newSheet(); CG.bits.length = 0; resetMk(); resetTs(); resetMw(); }
 
 // ---- 背景のにじみ ----
 const WASH = [
@@ -1606,6 +1798,7 @@ function frame(now){
     else if (S.scene === 'hipparu') updHip(dt);
     else if (S.scene === 'mekuru') updMekuru(dt);
     else if (S.scene === 'toosu') updToosu(dt);
+    else if (S.scene === 'mawasu') updMw(dt);
     else updChigiru(dt);
     updStars(dt);
   }
@@ -1621,6 +1814,7 @@ function frame(now){
   else if (S.scene === 'hipparu'){ if (S.pull === 'tissue') drawTissueBox(); else drawLamp(); }
   else if (S.scene === 'mekuru') drawMekuru();
   else if (S.scene === 'toosu') drawToosu();
+  else if (S.scene === 'mawasu') drawMawasu();
   else drawChigiru();
   drawStars();
   if (dusk > 0.001){
@@ -1646,8 +1840,9 @@ $('introBtn').addEventListener('click', () => { ensureAC(); intro.classList.add(
 // ---- 支援者メニュー（右上の点を1.2秒長押し）----
 const gear = $('gear');
 let holdTimer = null;
-function openPanel(){ cancelAll(); undoStack.length = 0; setMore(false); markOpts(); $('panel').classList.add('open'); $('closeBtn').focus({ preventScroll: true }); $('panel').querySelector('.sheet').scrollTop = 0; }
-function closePanel(){ $('panel').classList.remove('open'); gear.focus(); }
+let sensorTimer = null;
+function openPanel(){ clearInterval(sensorTimer); sensorTimer = setInterval(updSensorSt, 600); cancelAll(); undoStack.length = 0; setMore(false); markOpts(); $('panel').classList.add('open'); $('closeBtn').focus({ preventScroll: true }); $('panel').querySelector('.sheet').scrollTop = 0; }
+function closePanel(){ clearInterval(sensorTimer); $('panel').classList.remove('open'); gear.focus(); }
 gear.addEventListener('pointerdown', e => {
   e.preventDefault(); gear.classList.add('hold');
   holdTimer = setTimeout(() => { gear.classList.remove('hold'); openPanel(); }, 1200);
@@ -1657,18 +1852,20 @@ gear.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' '){
 
 // 今の値（ボタンの data-v とそろえる）
 function curOpts(){
-  return { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pages: String(S.pages), route: S.route, bsize: S.bsize, beads: String(S.beads), pinch: S.pinch, slide: S.slide, pull: S.pull, fingers: S.fingers, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, vol: S.sound ? String(S.vol) : '0' };
+  return { scene: S.scene, obj: S.obj, mouth: S.mouth, count: String(S.count), pages: String(S.pages), route: S.route, bsize: S.bsize, beads: String(S.beads), pinch: S.pinch, slide: S.slide, pull: S.pull, fingers: S.fingers, turnDir: S.turnDir, turnMode: S.turnMode, turnFlip: S.turnFlip, assist: S.assist, touch: S.firstOnly ? 'first' : 'all', look: S.look, vol: S.sound ? String(S.vol) : '0' };
 }
 // 「くわしく」の中で、はじめの値から変えているもの
-const MORE_DEF = { touch: 'first', look: 'mid', vol: '30', pinch: 'one', slide: 'on' };
+const MORE_DEF = { touch: 'first', look: 'mid', vol: '30', pinch: 'one', slide: 'on', turnMode: 'device', turnFlip: 'norm' };
+const SCENE_KEY = { pinch: 'toosu', slide: 'toosu', turnMode: 'mawasu', turnFlip: 'mawasu' };
 const MORE_LBL = { touch: { all: '触れ方：どの指でも' }, look: { soft: '見た目：やさしい', strong: '見た目：はっきり' },
-  vol: { '0': '音：なし', '15': '音：小', '45': '音：大' }, pinch: { two: 'つまみ方：2本の指' }, slide: { off: 'はなすと：とまる' } };
+  vol: { '0': '音：なし', '15': '音：小', '45': '音：大' }, pinch: { two: 'つまみ方：2本の指' }, slide: { off: 'はなすと：とまる' }, turnMode: { finger: '回し方：画面をなぞる' }, turnFlip: { rev: '見える向き：反対' } };
 function markOpts(){
   const cur = curOpts();
   document.querySelectorAll('#panel [data-set]').forEach(b => b.setAttribute('aria-pressed', String(cur[b.dataset.set] === b.dataset.v)));
   document.querySelectorAll('#panel [data-only]').forEach(el => el.classList.toggle('on', el.dataset.only === S.scene));
-  $('moreSum').textContent = (S.scene === 'toosu' ? 'つまみ方・はなすと・' : '') + '触れ方・見た目・音';
-  const ch = Object.keys(MORE_DEF).filter(k => (k !== 'pinch' && k !== 'slide') || S.scene === 'toosu')
+  $('moreSum').textContent = (S.scene === 'toosu' ? 'つまみ方・はなすと・' : S.scene === 'mawasu' ? '回し方・センサー・' : '') + '触れ方・見た目・音';
+  updSensorSt();
+  const ch = Object.keys(MORE_DEF).filter(k => !SCENE_KEY[k] || SCENE_KEY[k] === S.scene)
     .filter(k => cur[k] !== MORE_DEF[k]).map(k => (MORE_LBL[k] && MORE_LBL[k][cur[k]]) || '');
   $('moreMark').textContent = ch.filter(Boolean).length ? '変えている：' + ch.filter(Boolean).join('・') : '';
   $('undoBtn').disabled = !undoStack.length;
@@ -1686,6 +1883,9 @@ function applySet(k, v){
   if (k === 'slide'){ S.slide = v; TS.beads.forEach(b => { b.v = 0; }); }
   if (k === 'pull'){ S.pull = v; resetHip(); }
   if (k === 'fingers'){ S.fingers = v; CG.tear = null; CG.pend = null; }
+  if (k === 'turnDir'){ S.turnDir = v; resetMw(); }
+  if (k === 'turnMode'){ S.turnMode = v; MW.drag = null; }
+  if (k === 'turnFlip') S.turnFlip = v;
   if (k === 'assist') S.assist = v;
   if (k === 'touch') S.firstOnly = v === 'first';
   if (k === 'look') S.look = v;
@@ -1700,13 +1900,15 @@ $('panel').addEventListener('click', e => {
   if (b.dataset.set){
     const k = b.dataset.set, v = b.dataset.v, prev = curOpts()[k];
     if (prev === v) return;
+    if ((k === 'scene' && v === 'mawasu') || (k === 'turnMode' && v === 'device')) askMotion();     // 許可の確認は、押した直後でないと出ない
     undoStack.push({ k, v: prev }); if (undoStack.length > 30) undoStack.shift();
     applySet(k, v);
     markOpts();
   } else if (b.id === 'undoBtn'){
     const u = undoStack.pop(); if (u) applySet(u.k, u.v);
     markOpts();
-  } else if (b.id === 'moreBtn') setMore($('more').classList.contains('open') ? false : true);
+  } else if (b.id === 'sensorBtn') askMotion();
+  else if (b.id === 'moreBtn') setMore($('more').classList.contains('open') ? false : true);
   else if (b.id === 'closeBtn') closePanel();
   else if (b.id === 'introAgainBtn'){ closePanel(); intro.classList.remove('hide'); }
 });
